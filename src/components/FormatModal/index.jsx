@@ -8,7 +8,7 @@ import FormatContent from "../FormatContent";
 
 const MODAL_NAME = "formatter";
 
-const FormatModal = ({ children }) => {
+const FormatModal = () => {
   const isVisible = useSelector(
     (state) => state.modals?.formatter && state.modals?.formatter.visible
   );
@@ -84,6 +84,7 @@ const FormatModal = ({ children }) => {
           xl: "50%",
           xxl: "40%",
         }}
+        // open={isVisible}
         open={true}
         onOk={handleOk}
         okText="서식 추가"

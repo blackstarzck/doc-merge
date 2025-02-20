@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 
+import { flattenObject } from "../../utils";
 import Preview from "../Preview";
 
 const { Item } = Form;
@@ -117,11 +118,9 @@ const underLineOptions = [
 ];
 
 const defaultStyles = {
-  fontSize: "11px",
-  fontStyle: "normal",
-  fontWeight: "normal",
-  textDecorationLine: "none",
-  textDecorationStyle: "none",
+  fontSize: fontSizeOptions[5].value,
+  fontStyle: fontStyleOptions[0].value,
+  textDecorationLine: underLineOptions[0].value,
   textDecorationColor: "#000000",
   color: "#000000",
   backgroundColor: "#ffffff",
@@ -131,40 +130,45 @@ const FormatContent = () => {
   const [form] = Form.useForm();
   const [styles, setStyles] = useState(defaultStyles);
   const [menuItems, setMenuItems] = useState(TableElements);
+  const [isDisabled, setFormDisabled] = useState(true);
+  const [gridStyles, setGridStyles] = useState(null);
   const {
     token: { colorBorder },
   } = theme.useToken();
 
   const onValuesChange = (data) => {
-    let [[key, value]] = Object.entries(data);
+    const [[key, value]] = Object.entries(data);
+    const parsedValue =
+      key === "color" || key === "backgroundColor"
+        ? { [key]: value.toHexString() }
+        : { [key]: value };
 
-    if (key === "color" || key === "backgroundColor") {
-      value = JSON.stringify({ [key]: value.toHexString() });
-    }
-    value = JSON.parse(value);
-
-    setStyles((prev) => ({ ...prev, ...value }));
+    setStyles((prev) => ({ ...prev, ...parsedValue }));
   };
 
   useEffect(() => {
-    console.log("menuItems의 값이 변경되었습니다.");
+    const selectedItem = menuItems.find((item) => item.isSelected);
+    const styles = selectedItem?.styles || defaultStyles;
+
+    const gridStyles = {};
     menuItems.forEach((item) => {
-      if (item.isSelected) {
-        const selectedStyles = item.styles || defaultStyles;
-        console.log(item.styles, styles);
-        console.log("selectedStyles: ", selectedStyles);
-        form.setFieldsValue(selectedStyles);
+      if (item.styles) {
+        gridStyles[item.key] = flattenObject(item.styles);
+        setGridStyles((prev) => {
+          return { ...prev, ...gridStyles };
+        });
       }
     });
-  }, [menuItems]);
+
+    form.setFieldsValue(styles);
+    console.log(form.getFieldsValue());
+
+    setStyles(styles);
+  }, [menuItems, form]);
 
   const reset = () => {
     setStyles(defaultStyles);
-    setMenuItems((prev) => {
-      return prev.map((item) =>
-        item.isSelected ? { ...item, styles: null } : item
-      );
-    });
+    setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
     form.resetFields();
   };
 
@@ -180,6 +184,7 @@ const FormatContent = () => {
           <MenuWrapper $colorBorder={colorBorder}>
             <Menu
               onSelect={({ key }) => {
+                if (isDisabled) setFormDisabled(false);
                 setMenuItems((prev) => {
                   return prev.map((item) => ({
                     ...item,
@@ -206,7 +211,7 @@ const FormatContent = () => {
           <Head>
             <h4>미리 보기</h4>
           </Head>
-          <Preview type="grid" />
+          <Preview settings={menuItems} type="grid" />
         </ColWrapper>
       </Row>
       <Divider />
@@ -214,15 +219,16 @@ const FormatContent = () => {
       <Row gutter={16}>
         {/* 위쪽 */}
         <ColWrapper span={12}>
-          <Form form={form} onValuesChange={onValuesChange} layout="vertical">
+          <Form
+            disabled={isDisabled}
+            form={form}
+            onValuesChange={onValuesChange}
+            layout="vertical"
+          >
             <div style={{ flexDirection: "column" }}>
               <Row gutter={10} style={{ flex: 1, marginBottom: 16 }}>
                 <Col span={8}>
-                  <ItemWrapper
-                    name="fontStyle"
-                    label="스타일"
-                    initialValue="normal"
-                  >
+                  <ItemWrapper name="fontStyle" label="스타일">
                     <Select
                       popupMatchSelectWidth={false}
                       options={fontStyleOptions}
@@ -230,7 +236,7 @@ const FormatContent = () => {
                   </ItemWrapper>
                 </Col>
                 <Col span={8}>
-                  <ItemWrapper name="fontSize" label="크기" initialValue={11}>
+                  <ItemWrapper name="fontSize" label="크기">
                     <Select
                       popupMatchSelectWidth={false}
                       options={fontSizeOptions}
@@ -238,11 +244,7 @@ const FormatContent = () => {
                   </ItemWrapper>
                 </Col>
                 <Col span={8}>
-                  <ItemWrapper
-                    name="textDecoration"
-                    label="밑줄"
-                    initialValue="none"
-                  >
+                  <ItemWrapper name="textDecorationLine" label="밑줄">
                     <Select
                       popupMatchSelectWidth={false}
                       options={underLineOptions}
@@ -252,16 +254,12 @@ const FormatContent = () => {
               </Row>
               <Row gutter={10} style={{ flex: 1 }}>
                 <Col span={12}>
-                  <ItemWrapper initialValue="#000000" name="color" label="색">
+                  <ItemWrapper name="color" label="색">
                     <ColorPicker onFormatChange={"hex"} showText={true} />
                   </ItemWrapper>
                 </Col>
                 <Col span={12}>
-                  <ItemWrapper
-                    initialValue="#ffffff"
-                    name="backgroundColor"
-                    label="배경색"
-                  >
+                  <ItemWrapper name="backgroundColor" label="배경색">
                     <ColorPicker onFormatChange={"hex"} showText={true} />
                   </ItemWrapper>
                 </Col>
@@ -274,6 +272,7 @@ const FormatContent = () => {
             <h4>미리 보기</h4>
             <div>
               <Button
+                disabled={isDisabled}
                 size="small"
                 color="default"
                 variant="text"
@@ -290,6 +289,7 @@ const FormatContent = () => {
               </Button>
               <Divider type="vertical" />
               <Button
+                disabled={isDisabled}
                 size="small"
                 color="default"
                 variant="text"
@@ -312,7 +312,11 @@ const MenuWrapper = styled.div`
   border-style: solid;
   border-color: ${({ $colorBorder }) => $colorBorder};
   border-radius: 8px;
-  overflow: hidden;
+  overflow-y: auto;
+  height: 300px;
+  scrollbar-width: thin;
+  scrollbar-color: #eaeaea transparent;
+  scrollbar-gutter: stable;
 
   & > ul {
     border-inline-end: none !important;

@@ -1,10 +1,13 @@
 import { Col, Row, theme } from "antd";
 import styled from "styled-components";
 
-const ROW_COUNT = 6;
-const COL_COUNT = 7;
+import { flattenObject } from "../../utils";
+import Grid from "./Grid";
+import Text from "./Text";
 
-const Preview = ({ type, styles }) => {
+const Preview = ({ settings, type, styles }) => {
+  const flattened = flattenObject(styles);
+
   const {
     token: { colorBorder },
   } = theme.useToken();
@@ -12,34 +15,17 @@ const Preview = ({ type, styles }) => {
   return (
     <Wrapper $colorBorder={colorBorder}>
       {type === "grid" ? (
-        <PreviewGrid>
-          <Row gutter={[4, 4]}>
-            {Array.from({ length: ROW_COUNT * COL_COUNT }, (_, colIndex) => (
-              <Col key={colIndex} span={4}>
-                <Box>text-{colIndex}</Box>
-              </Col>
-            ))}
-          </Row>
-        </PreviewGrid>
+        <Grid settings={settings} styles={flattened} />
       ) : (
-        <PreviewText style={{ ...styles }}>맑은 고딕</PreviewText>
+        <Text styles={flattened}>맑은 고딕</Text>
       )}
     </Wrapper>
   );
 };
 
-const PreviewGrid = styled.div`
-  padding: 16px;
-`;
-
 const PreviewText = styled.div`
   font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
   padding: 16px;
-`;
-
-const Box = styled.div`
-  font-size: 12px;
-  background-color: red;
 `;
 
 const Wrapper = styled.div`

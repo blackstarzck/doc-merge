@@ -1,5 +1,5 @@
 import { Button, Divider, Dropdown, Space, theme } from "antd";
-import React from "react";
+import { cloneElement, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
@@ -26,7 +26,7 @@ const { useToken } = theme;
 
 const FormatHandler = () => {
   const { token } = useToken();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const contentStyle = {
     backgroundColor: token.colorBgElevated,
     borderRadius: token.borderRadiusLG,
@@ -55,7 +55,7 @@ const FormatHandler = () => {
           trigger={["click"]}
           dropdownRender={(menu) => (
             <div style={contentStyle}>
-              {React.cloneElement(menu, {
+              {cloneElement(menu, {
                 style: { boxShadow: "none" },
               })}
               <Divider style={{ margin: 0 }} />
