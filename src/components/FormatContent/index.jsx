@@ -5,16 +5,15 @@ import {
   ColorPicker,
   Divider,
   Form,
-  List,
   Menu,
   Row,
   Select,
   theme,
 } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 
-import PreviewGrid from "../PreviewGrid";
+import Preview from "../Preview";
 
 const { Item } = Form;
 
@@ -98,7 +97,7 @@ const fontStyleOptions = [
 
 const fontSizeOptions = Array.from({ length: 24 - 6 + 1 }, (_, i) => ({
   value: `{"fontSize": "${i + 6}px"}`,
-  label: i + 6,
+  label: `${i + 6}px`,
 }));
 
 const underLineOptions = [
@@ -146,6 +145,18 @@ const FormatContent = () => {
 
     setStyles((prev) => ({ ...prev, ...value }));
   };
+
+  useEffect(() => {
+    console.log("menuItems의 값이 변경되었습니다.");
+    menuItems.forEach((item) => {
+      if (item.isSelected) {
+        const selectedStyles = item.styles || defaultStyles;
+        console.log(item.styles, styles);
+        console.log("selectedStyles: ", selectedStyles);
+        form.setFieldsValue(selectedStyles);
+      }
+    });
+  }, [menuItems]);
 
   const reset = () => {
     setStyles(defaultStyles);
@@ -195,9 +206,7 @@ const FormatContent = () => {
           <Head>
             <h4>미리 보기</h4>
           </Head>
-          <Preview $colorBorder={colorBorder}>
-            <PreviewGrid />
-          </Preview>
+          <Preview type="grid" />
         </ColWrapper>
       </Row>
       <Divider />
@@ -290,9 +299,7 @@ const FormatContent = () => {
               </Button>
             </div>
           </Head>
-          <Preview $colorBorder={colorBorder}>
-            <PreviewText style={{ ...styles }}>맑은 고딕</PreviewText>
-          </Preview>
+          <Preview type="text" styles={styles} />
         </ColWrapper>
         {/* 아래쪽 */}
       </Row>
@@ -332,34 +339,9 @@ const ColWrapper = styled(Col)`
   flex-direction: column;
 `;
 
-const Preview = styled.div`
-  border-width: 1px;
-  border-style: solid;
-  border-color: ${({ $colorBorder }) => $colorBorder};
-  border-radius: 8px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const PreviewText = styled.div`
-  font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
-  padding: 16px;
-`;
-
 const ItemWrapper = styled(Item)`
   margin-bottom: 0;
   overflow: hidden;
-`;
-
-const ListrItem = styled(List.Item)`
-  transition: background-color 0.3s ease;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
 `;
 
 export default FormatContent;
