@@ -4,6 +4,7 @@ import {
   Col,
   ColorPicker,
   Divider,
+  Flex,
   Form,
   Menu,
   Row,
@@ -13,6 +14,12 @@ import {
 import { useEffect, useState } from "react";
 import styled, { css } from "styled-components";
 
+import {
+  FONT_SIZE_OPTIONS,
+  FONT_STYLE_OPTIONS,
+  TABLE_ELEMENTS,
+  UNDERLINE_OPTIONS,
+} from "../../constants/options";
 import { flattenObject } from "../../utils";
 import Preview from "../Preview";
 
@@ -45,98 +52,29 @@ const Wrap = styled.div`
   }
 `;
 
-const TableElements = [
-  { key: "all", styles: null, isSelected: false, label: "전체 표" },
-  {
-    key: "fst-columns-repeat",
-    styles: null,
-    isSelected: false,
-    label: "열 줄무늬",
-  },
-  {
-    key: "scnd-columns-repeat",
-    styles: null,
-    isSelected: false,
-    label: "둘째 열 줄무늬",
-  },
-  {
-    key: "fst-rows-repeat",
-    styles: null,
-    isSelected: false,
-    label: "첫 행 줄무늬",
-  },
-  {
-    key: "scnd-rows-repeat",
-    styles: null,
-    isSelected: false,
-    label: "둘째 행 줄무늬",
-  },
-  { key: "lst-column", styles: null, isSelected: false, label: "마지막 열" },
-  { key: "fst-column", styles: null, isSelected: false, label: "첫째 열" },
-  { key: "fst-row", styles: null, isSelected: false, label: "머리글 행" },
-  { key: "lst-row", styles: null, isSelected: false, label: "요약 행" },
-];
-
-const fontStyleOptions = [
-  {
-    value: '{"fontStyle":"normal","fontWeight":"normal"}',
-    label: "보통",
-  },
-  {
-    value: '{"fontStyle":"italic","fontWeight":"normal"}',
-    label: "기울임꼴",
-  },
-  {
-    value: '{"fontStyle":"normal","fontWeight":"bold"}',
-    label: "굵게",
-  },
-  {
-    value: '{"fontStyle":"italic","fontWeight":"bold"}',
-    label: "굵은 기울임꼴",
-  },
-];
-
-const fontSizeOptions = Array.from({ length: 24 - 6 + 1 }, (_, i) => ({
-  value: `{"fontSize": "${i + 6}px"}`,
-  label: `${i + 6}px`,
-}));
-
-const underLineOptions = [
-  {
-    value: '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-    label: "없음",
-  },
-  {
-    value: '{"textDecorationLine":"underline","textDecorationStyle":"solid"}',
-    label: "밑줄",
-  },
-  {
-    value:
-      '{"textDecorationLine":"line-through","textDecorationStyle":"solid"}',
-    label: "취소선",
-  },
-];
-
 const defaultStyles = {
-  fontSize: fontSizeOptions[5].value,
-  fontStyle: fontStyleOptions[0].value,
-  textDecorationLine: underLineOptions[0].value,
+  fontSize: FONT_SIZE_OPTIONS[5].value,
+  fontStyle: FONT_STYLE_OPTIONS[0].value,
+  textDecorationLine: UNDERLINE_OPTIONS[0].value,
   textDecorationColor: "#000000",
   color: "#000000",
   backgroundColor: "#ffffff",
 };
 
-const FormatContent = () => {
+const FormatContent = ({ handleCancel, saveCustomFormat }) => {
   const [form] = Form.useForm();
   const [styles, setStyles] = useState(defaultStyles);
-  const [menuItems, setMenuItems] = useState(TableElements);
-  const [isDisabled, setFormDisabled] = useState(true);
-  const [gridStyles, setGridStyles] = useState(null);
+  const [menuItems, setMenuItems] = useState(TABLE_ELEMENTS);
+  const [isFormDisabled, setFormDisabled] = useState(true);
+  const [isSaveDisabled, setSaveDisabled] = useState(false);
+  const [gridStyles, setGridStyles] = useState({});
+  const [selectedKeys, setSelectedKeys] = useState();
+
   const {
     token: { colorBorder },
   } = theme.useToken();
 
-  const onValuesChange = (data) => {
+  const handleValuesChange = (data) => {
     const [[key, value]] = Object.entries(data);
     const parsedValue =
       key === "color" || key === "backgroundColor"
@@ -149,8 +87,8 @@ const FormatContent = () => {
   useEffect(() => {
     const selectedItem = menuItems.find((item) => item.isSelected);
     const styles = selectedItem?.styles || defaultStyles;
-
     const gridStyles = {};
+
     menuItems.forEach((item) => {
       if (item.styles) {
         gridStyles[item.key] = flattenObject(item.styles);
@@ -160,8 +98,11 @@ const FormatContent = () => {
       }
     });
 
+    Object.keys(gridStyles).length > 0
+      ? setSaveDisabled(false)
+      : setSaveDisabled(true);
+
     form.setFieldsValue(styles);
-    console.log(form.getFieldsValue());
 
     setStyles(styles);
   }, [menuItems, form]);
@@ -170,6 +111,21 @@ const FormatContent = () => {
     setStyles(defaultStyles);
     setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
     form.resetFields();
+  };
+
+  const handleMenuClick = (e) => {
+    setSelectedKeys(e.key); // 선택된 메뉴 항목을 업데이트
+  };
+
+  const handleDeselect = () => {
+    setSelectedKeys(""); // 선택된 항목을 해제
+  };
+
+  const handleDeleteStyles = (key) => {
+    console.log("delete target: ", key);
+    setMenuItems((prev) =>
+      prev.map((item) => (item.key === key ? { ...item, styles: null } : item))
+    );
   };
 
   return (
@@ -183,8 +139,10 @@ const FormatContent = () => {
           </Head>
           <MenuWrapper $colorBorder={colorBorder}>
             <Menu
+              selectedKeys={selectedKeys}
+              onClick={handleMenuClick}
               onSelect={({ key }) => {
-                if (isDisabled) setFormDisabled(false);
+                if (isFormDisabled) setFormDisabled(false);
                 setMenuItems((prev) => {
                   return prev.map((item) => ({
                     ...item,
@@ -220,9 +178,9 @@ const FormatContent = () => {
         {/* 위쪽 */}
         <ColWrapper span={12}>
           <Form
-            disabled={isDisabled}
+            disabled={isFormDisabled}
             form={form}
-            onValuesChange={onValuesChange}
+            onValuesChange={handleValuesChange}
             layout="vertical"
           >
             <div style={{ flexDirection: "column" }}>
@@ -231,7 +189,7 @@ const FormatContent = () => {
                   <ItemWrapper name="fontStyle" label="스타일">
                     <Select
                       popupMatchSelectWidth={false}
-                      options={fontStyleOptions}
+                      options={FONT_STYLE_OPTIONS}
                     />
                   </ItemWrapper>
                 </Col>
@@ -239,7 +197,7 @@ const FormatContent = () => {
                   <ItemWrapper name="fontSize" label="크기">
                     <Select
                       popupMatchSelectWidth={false}
-                      options={fontSizeOptions}
+                      options={FONT_SIZE_OPTIONS}
                     />
                   </ItemWrapper>
                 </Col>
@@ -247,7 +205,7 @@ const FormatContent = () => {
                   <ItemWrapper name="textDecorationLine" label="밑줄">
                     <Select
                       popupMatchSelectWidth={false}
-                      options={underLineOptions}
+                      options={UNDERLINE_OPTIONS}
                     />
                   </ItemWrapper>
                 </Col>
@@ -272,12 +230,11 @@ const FormatContent = () => {
             <h4>미리 보기</h4>
             <div>
               <Button
-                disabled={isDisabled}
+                disabled={isFormDisabled}
                 size="small"
                 color="default"
                 variant="text"
                 onClick={() => {
-                  console.log("저장: ", styles);
                   setMenuItems((prev) => {
                     return prev.map((item) =>
                       item.isSelected ? { ...item, styles } : { ...item }
@@ -289,11 +246,11 @@ const FormatContent = () => {
               </Button>
               <Divider type="vertical" />
               <Button
-                disabled={isDisabled}
+                disabled={isFormDisabled}
                 size="small"
                 color="default"
                 variant="text"
-                onClick={reset}
+                onClick={() => handleDeleteStyles(selectedKeys)}
               >
                 지우기
               </Button>
@@ -303,6 +260,29 @@ const FormatContent = () => {
         </ColWrapper>
         {/* 아래쪽 */}
       </Row>
+      <Flex gap="middle" justify="end" style={{ padding: "46px 0 24px 0" }}>
+        <Button
+          onClick={() => {
+            reset();
+            handleCancel();
+            handleDeselect();
+          }}
+        >
+          닫기
+        </Button>
+        <Button
+          disabled={isSaveDisabled || Object.keys(gridStyles).length === 0}
+          onClick={() => {
+            const hasStyles = Object.keys(gridStyles).length > 0;
+            if (hasStyles) saveCustomFormat(gridStyles);
+            reset();
+            handleCancel();
+          }}
+          type="primary"
+        >
+          추가하기
+        </Button>
+      </Flex>
     </ContentBody>
   );
 };
@@ -324,7 +304,7 @@ const MenuWrapper = styled.div`
 `;
 
 const ContentBody = styled.div`
-  padding: 24px 0;
+  padding-top: 24px;
 `;
 
 const Head = styled.div`

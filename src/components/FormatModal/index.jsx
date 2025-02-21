@@ -9,6 +9,7 @@ import FormatContent from "../FormatContent";
 const MODAL_NAME = "formatter";
 
 const FormatModal = () => {
+  const [customFormat, setCustomFormat] = useState();
   const isVisible = useSelector(
     (state) => state.modals?.formatter && state.modals?.formatter.visible
   );
@@ -30,13 +31,12 @@ const FormatModal = () => {
     }
   }, [isVisible]);
 
-  const handleOk = (e) => {
-    console.log(e);
+  const saveCustomFormat = (styles) => {
+    console.log("saveCustomFormat: ", styles); // 모달에서 전달한 저장된 스타일값을 어디에 저장해야함
     dispatch(setVisibleState({ modalName: MODAL_NAME, visible: false }));
   };
 
-  const handleCancel = (e) => {
-    console.log(e);
+  const handleCancel = () => {
     dispatch(setVisibleState({ modalName: MODAL_NAME, visible: false }));
   };
 
@@ -84,11 +84,8 @@ const FormatModal = () => {
           xl: "50%",
           xxl: "40%",
         }}
-        // open={isVisible}
-        open={true}
-        onOk={handleOk}
-        okText="서식 추가"
-        cancelText="닫기"
+        open={isVisible}
+        footer={null}
         onCancel={handleCancel}
         modalRender={(modal) => (
           <Draggable
@@ -101,7 +98,10 @@ const FormatModal = () => {
           </Draggable>
         )}
       >
-        <FormatContent />
+        <FormatContent
+          handleCancel={handleCancel}
+          saveCustomFormat={saveCustomFormat}
+        />
       </Modal>
     </>
   );

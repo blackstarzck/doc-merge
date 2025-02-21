@@ -5,7 +5,7 @@ const ROW_COUNT = 6;
 const COL_COUNT = 7;
 
 const Grid = ({ settings, styles }) => {
-  console.log("Settings", settings);
+  // console.log("Settings", settings);
 
   return (
     <Wrapper>

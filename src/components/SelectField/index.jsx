@@ -22,7 +22,6 @@ const SelectField = ({ name, onChange, onSearch }) => {
         <SelectWrapper
           // open={true}
           showSearch
-          size="large"
           placeholder="Select a person"
           optionFilterProp="label"
           onChange={onChange}

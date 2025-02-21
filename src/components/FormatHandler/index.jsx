@@ -1,80 +1,147 @@
-import { Button, Divider, Dropdown, Space, theme } from "antd";
-import { cloneElement, useState } from "react";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Divider, Form, Input, Select, Space, Tag } from "antd";
+import { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
+import { DEFAULT_FORMAT_ITEMS } from "../../constants/options";
 import { setVisibleState } from "../../store/modals/modalsSlice";
 import FormatModal from "../FormatModal";
-import { TableEditOutLined } from "../icons";
 
-const items = [
-  {
-    key: "1",
-    label: "Type-A",
-  },
-  {
-    key: "2",
-    label: "Type-B",
-  },
-  {
-    key: "3",
-    label: "Type-C",
-  },
-];
-
-const { useToken } = theme;
+let index = 0;
 
 const FormatHandler = () => {
-  const { token } = useToken();
-  const [open, setOpen] = useState(false);
-  const contentStyle = {
-    backgroundColor: token.colorBgElevated,
-    borderRadius: token.borderRadiusLG,
-    boxShadow: token.boxShadowSecondary,
-  };
+  const [form] = Form.useForm();
+  const [items, setItems] = useState(DEFAULT_FORMAT_ITEMS);
+  const [name, setName] = useState("");
+  const inputRef = useRef(null);
   const dispatch = useDispatch();
 
-  const onClickSelectStyle = (param) => {
-    setOpen(false);
+  const onNameChange = (event) => {
+    console.log("onNameChange: ", event.target.value);
+
+    setName(event.target.value);
+  };
+  const addItem = (e) => {
+    e.preventDefault();
+
+    // Submit form to trigger validation
+    form
+      .validateFields()
+      .then(() => {
+        setItems([...items, { key: `custom-${index++}`, label: name }]);
+        setName("");
+        form.setFieldValue("confirm", "");
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
+      })
+      .catch((error) => {
+        console.log("Validation failed:", error);
+      });
   };
 
-  const onClickOpenFormatter = () => {
-    setOpen(false);
+  const onClickDeleteFormat = (key) => {
+    setItems((prev) => prev.filter((item) => item.key !== key));
+  };
+
+  const openFormatter = () => {
     setTimeout(() => {
       dispatch(setVisibleState({ modalName: "formatter", visible: true }));
     }, 200);
   };
 
+  const onFinish = (values) => {
+    console.log("폼 제출됨:", values);
+  };
+
+  const validateSameName = (_, value) => {
+    const filter = items.filter((item) => item.label === value);
+    const isSameName = filter.length > 0;
+    console.log("validateSameName value: ", value, name, isSameName);
+
+    if (isSameName) {
+      return Promise.reject(new Error("존재하는 서식이름입니다"));
+    }
+    return Promise.resolve();
+  };
+
   return (
     <>
       <Wrapper>
-        <Dropdown
-          open={open}
-          onOpenChange={(open) => setOpen(open)}
-          menu={{ items, onClick: onClickSelectStyle }}
-          trigger={["click"]}
-          dropdownRender={(menu) => (
-            <div style={contentStyle}>
-              {cloneElement(menu, {
-                style: { boxShadow: "none" },
-              })}
-              <Divider style={{ margin: 0 }} />
-              <SpaceWrapper style={{ padding: 16, width: "100%" }}>
-                <Button
-                  onClick={onClickOpenFormatter}
-                  style={{ width: "100%" }}
-                  type="primary"
-                >
-                  표 스타일 새로 만들기
-                </Button>
-              </SpaceWrapper>
-            </div>
-          )}
-        >
-          <Button icon={<TableEditOutLined style={{ fontSize: 22 }} />}>
-            표 서식
-          </Button>
-        </Dropdown>
+        <Select
+          style={{ width: 300 }}
+          onSelect={(data) => {
+            if (data.includes("custom")) openFormatter();
+          }}
+          onDropdownVisibleChange={() => {
+            setName("");
+          }}
+          optionLabelProp="key"
+          options={items.map((item) => ({
+            label: (
+              <OptionWrapper>
+                <div>
+                  {item.key.includes("custom") && (
+                    <Tag color="magenta">새 서식</Tag>
+                  )}
+                  <span>{item.label}</span>
+                </div>
+                {item.key.includes("custom") && (
+                  <Button
+                    variant="text"
+                    color="defalut"
+                    icon={<DeleteOutlined />}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onClickDeleteFormat(item.key);
+                    }}
+                  />
+                )}
+              </OptionWrapper>
+            ),
+            value: item.key,
+            key: item.label,
+          }))}
+          placeholder="서식을 선택해주세요"
+          dropdownRender={(menu) => {
+            return (
+              <>
+                {menu}
+                <Divider style={{ margin: "8px 0" }} />
+                <Space style={{ padding: "0 8px 4px" }}>
+                  <FormWrapper form={form} onFinish={onFinish}>
+                    <Form.Item
+                      name="confirm"
+                      rules={[{ validator: validateSameName }]}
+                    >
+                      <Input
+                        ref={inputRef}
+                        value={name}
+                        allowClear
+                        autoSave="off"
+                        onChange={onNameChange}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </Form.Item>
+                    <Form.Item>
+                      <Button
+                        htmlType="submit"
+                        disabled={!name}
+                        type="text"
+                        icon={<PlusOutlined />}
+                        onClick={addItem}
+                      >
+                        Add item
+                      </Button>
+                    </Form.Item>
+                  </FormWrapper>
+                </Space>
+              </>
+            );
+          }}
+        />
       </Wrapper>
 
       <FormatModal />
@@ -82,17 +149,22 @@ const FormatHandler = () => {
   );
 };
 
-const Wrapper = styled.div`
-  text-align: right;
+const OptionWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
-const SpaceWrapper = styled(Space)`
-  padding: 16px;
-  width: 100%;
+const Wrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
 
-  & .ant-space-item {
-    width: 100%;
-  }
+const FormWrapper = styled(Form)`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  gap: 8px;
 `;
 
 export default FormatHandler;
