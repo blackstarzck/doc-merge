@@ -21,6 +21,8 @@ const FormatHandler = () => {
     console.log("onNameChange: ", event.target.value);
 
     setName(event.target.value);
+
+    console.log("field value: ", form.getFieldValue("confirm"));
   };
   const addItem = (e) => {
     e.preventDefault();
@@ -74,8 +76,10 @@ const FormatHandler = () => {
           onSelect={(data) => {
             if (data.includes("custom")) openFormatter();
           }}
-          onDropdownVisibleChange={() => {
+          onDropdownVisibleChange={(open) => {
+            console.log("여기", open);
             setName("");
+            form.setFieldValue("confirm", "");
           }}
           optionLabelProp="key"
           options={items.map((item) => ({
