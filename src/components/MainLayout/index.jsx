@@ -2,15 +2,17 @@ import {
   BookOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-} from "@ant-design/icons";
-import { Button, Layout, Menu, theme } from "antd";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+} from "@ant-design/icons"
+import { Button, Layout, Menu, theme } from "antd"
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import styled from "styled-components"
 
-import Logo from "../Logo";
-import SiderSelectSection from "../SiderSelectSection";
+import Logo from "../Logo"
+import SiderSelectSection from "../SiderSelectSection"
+import UploadZone from "../UploadZone"
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content } = Layout
 const menuItems = [
   { label: "도서납품현황", path: "/a", key: "a", icon: <BookOutlined /> },
   { label: "용역, 물품 납품", path: "/b", key: "b", icon: <BookOutlined /> },
@@ -22,24 +24,25 @@ const menuItems = [
     icon: <BookOutlined />,
   },
   { label: "화물사용", path: "/e", key: "e", icon: <BookOutlined /> },
-];
+]
 
 const MainLayout = ({ children }) => {
-  const [documentId, setDocumentId] = useState(null);
-  const [collapsed, setCollapsed] = useState(false);
-  const navigate = useNavigate();
+  const [documentId, setDocumentId] = useState(null)
+  const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
   const {
     token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  } = theme.useToken()
 
-  const params = useParams();
+  const params = useParams()
   useEffect(() => {
-    setDocumentId(params.documentId);
-  }, [params]);
+    setDocumentId(params.documentId)
+  }, [params])
 
   const handleMenuClick = (item) => {
-    navigate(`/${item.key}`);
-  };
+    console.log("path: ", item)
+    navigate(`/${item.key}`)
+  }
 
   return (
     <Layout style={{ height: "100vh" }}>
@@ -54,12 +57,16 @@ const MainLayout = ({ children }) => {
           style={{ paddingTop: 46 }}
         />
         <SiderSelectSection />
+        <UploadZone />
       </Sider>
       <Layout>
         <Header
           style={{
             padding: 0,
             background: colorBgContainer,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Button
@@ -86,7 +93,9 @@ const MainLayout = ({ children }) => {
         </Content>
       </Layout>
     </Layout>
-  );
-};
+  )
+}
 
-export default MainLayout;
+const HeaderWrapper = styled(Header)``
+
+export default MainLayout

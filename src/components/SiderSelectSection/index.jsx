@@ -1,18 +1,27 @@
-import { Divider, Select, theme } from "antd";
-import { useState } from "react";
-import styled from "styled-components";
+import { Divider, Select, theme } from "antd"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import styled from "styled-components"
+import useSWR from "swr"
+
+import fetcher from "../../lib/fetcher"
 
 const SiderSelectSection = () => {
-  const [isSelected, setIsSelected] = useState(false);
+  const [isSelected, setIsSelected] = useState(false)
+  const { data, error, mutate } = useSWR("/sheets", fetcher)
+  const navigate = useNavigate()
   const {
     token: { colorPrimary },
-  } = theme.useToken();
+  } = theme.useToken()
 
   const onChange = (value) => {
-    console.log(`selected ${value}`);
-    setIsSelected(true);
-  };
-  const onSearch = (value) => {};
+    console.log(`selected ${value}`)
+    setIsSelected(true)
+    navigate(`./${value}`)
+  }
+  const onSearch = (value) => {}
+
+  useEffect(() => {}, [])
 
   return (
     <Wrapper>
@@ -26,29 +35,19 @@ const SiderSelectSection = () => {
         optionFilterProp="label"
         onChange={onChange}
         onSearch={onSearch}
-        options={[
-          {
-            value: "jack",
-            label: "JackJackJackJackJackJackJackJackJackJackJackJackJackJack",
-          },
-          {
-            value: "lucy",
-            label: "Lucy",
-          },
-          {
-            value: "tom",
-            label: "Tom",
-          },
-        ]}
+        options={data?.map((sheet) => ({
+          value: sheet.id,
+          label: sheet.name,
+        }))}
       />
     </Wrapper>
-  );
-};
+  )
+}
 
 const Wrapper = styled.div`
   width: 100%;
   padding: 0 4px;
-`;
+`
 
 const SelectWrapper = styled(Select)`
   width: 100%;
@@ -75,6 +74,6 @@ const SelectWrapper = styled(Select)`
     color: ${(props) =>
       props.$isSelected ? props.$primary : "#ffffff"} !important;
   }
-`;
+`
 
-export default SiderSelectSection;
+export default SiderSelectSection

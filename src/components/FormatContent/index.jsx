@@ -11,7 +11,8 @@ import {
   Select,
   theme,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled, { css } from "styled-components";
 
 import {
@@ -68,7 +69,8 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
   const [isFormDisabled, setFormDisabled] = useState(true);
   const [isSaveDisabled, setSaveDisabled] = useState(false);
   const [gridStyles, setGridStyles] = useState({});
-  const [selectedKeys, setSelectedKeys] = useState();
+  const [selectedKeys, setSelectedKeys] = useState(); // 리스트 모두 styles 가 없을때 비활성화
+  const visibility = useSelector((state) => state.modals?.formatter.visible);
 
   const {
     token: { colorBorder },
@@ -84,6 +86,34 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
     setStyles((prev) => ({ ...prev, ...parsedValue }));
   };
 
+  const handleMenuClick = (e) => {
+    setSelectedKeys(e.key); // 선택된 메뉴 항목을 업데이트
+  };
+
+  const handleDeselect = () => {
+    setSelectedKeys(""); // 선택된 항목을 해제
+  };
+
+  const handleDeleteStyles = (key) => {
+    setMenuItems((prev) =>
+      prev.map((item) => (item.key === key ? { ...item, styles: null } : item))
+    );
+  };
+
+  const reset = useCallback(() => {
+    setStyles(defaultStyles);
+    setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
+    form.resetFields();
+  }, [form]);
+
+  useEffect(() => {
+    if (!visibility) {
+      reset();
+      handleCancel();
+      handleDeselect();
+    }
+  }, [handleCancel, reset, visibility]);
+
   useEffect(() => {
     const selectedItem = menuItems.find((item) => item.isSelected);
     const styles = selectedItem?.styles || defaultStyles;
@@ -92,9 +122,7 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
     menuItems.forEach((item) => {
       if (item.styles) {
         gridStyles[item.key] = flattenObject(item.styles);
-        setGridStyles((prev) => {
-          return { ...prev, ...gridStyles };
-        });
+        setGridStyles((prev) => ({ ...prev, ...gridStyles }));
       }
     });
 
@@ -106,27 +134,6 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
 
     setStyles(styles);
   }, [menuItems, form]);
-
-  const reset = () => {
-    setStyles(defaultStyles);
-    setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
-    form.resetFields();
-  };
-
-  const handleMenuClick = (e) => {
-    setSelectedKeys(e.key); // 선택된 메뉴 항목을 업데이트
-  };
-
-  const handleDeselect = () => {
-    setSelectedKeys(""); // 선택된 항목을 해제
-  };
-
-  const handleDeleteStyles = (key) => {
-    console.log("delete target: ", key);
-    setMenuItems((prev) =>
-      prev.map((item) => (item.key === key ? { ...item, styles: null } : item))
-    );
-  };
 
   return (
     <ContentBody>
@@ -262,15 +269,6 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
       </Row>
       <Flex gap="middle" justify="end" style={{ padding: "46px 0 24px 0" }}>
         <Button
-          onClick={() => {
-            reset();
-            handleCancel();
-            handleDeselect();
-          }}
-        >
-          닫기
-        </Button>
-        <Button
           disabled={isSaveDisabled || Object.keys(gridStyles).length === 0}
           onClick={() => {
             const hasStyles = Object.keys(gridStyles).length > 0;
@@ -280,7 +278,7 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
           }}
           type="primary"
         >
-          추가하기
+          적용하기
         </Button>
       </Flex>
     </ContentBody>
@@ -326,6 +324,11 @@ const ColWrapper = styled(Col)`
 const ItemWrapper = styled(Item)`
   margin-bottom: 0;
   overflow: hidden;
+
+  & .ant-color-picker-trigger {
+    width: 100%;
+    justify-content: start;
+  }
 `;
 
 export default FormatContent;

@@ -1,7 +1,7 @@
-import axios from "axios";
+import axios from "axios"
 
-axios.defaults.baseURL = "http://localhost:3001";
+axios.defaults.baseURL = "http://localhost:3000"
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
+const fetcher = (url) => axios.get(url).then((res) => res.data)
 
-export default fetcher;
+export default fetcher
