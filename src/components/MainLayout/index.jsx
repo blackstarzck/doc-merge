@@ -44,6 +44,10 @@ const MainLayout = ({ children }) => {
     navigate(`/${item.key}`)
   }
 
+  useEffect(() => {
+    navigate(`/${menuItems[0].key}`)
+  }, [])
+
   return (
     <Layout style={{ height: "100vh" }}>
       <Sider width={250} trigger={null} collapsible collapsed={collapsed}>
