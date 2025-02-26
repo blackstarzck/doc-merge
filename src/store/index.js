@@ -1,15 +1,15 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit"
 
-import documentSliceReducer from "./documents/documentSlice";
-import thunk from "./middleware/thunk";
-import modalsSliceReducer from "./modals/modalsSlice";
-import selectedRowSliceReducer from "./selectedRows/selectedRowIdSlice";
+import thunk from "./middleware/thunk"
+import modalsSliceReducer from "./modals/modalsSlice"
+import organizationsSliceReducer from "./organizations/organizationsSlice"
+import selectedRowSliceReducer from "./selectedRows/selectedRowIdSlice"
 
 export default configureStore({
   reducer: {
-    documents: documentSliceReducer,
+    organizations: organizationsSliceReducer,
     selectedRows: selectedRowSliceReducer,
     modals: modalsSliceReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
-});
+})

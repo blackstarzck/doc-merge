@@ -1,18 +1,18 @@
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import styled from "styled-components";
+import { useEffect } from "react"
+import { useSelector } from "react-redux"
+import styled from "styled-components"
 
-import ActionHandler from "../ActionHandler";
-import BodySelectSection from "../BodySelectSection";
-import FormatHandler from "../FormatHandler";
-import TableSection from "../TableSection";
+import ActionHandler from "../ActionHandler"
+import BodySelectSection from "../BodySelectSection"
+import FormatHandler from "../FormatHandler"
+import TableSection from "../TableSection"
 
 const BodySection = () => {
-  const documents = useSelector((state) => state.documents.data);
+  const organizations = useSelector((state) => state.organizations.data)
 
   useEffect(() => {
-    // console.log("1. documents: ", documents);
-  }, [documents]);
+    // console.log("1. organizations: ", organizations);
+  }, [organizations])
 
   return (
     <Wrapper>
@@ -21,14 +21,14 @@ const BodySection = () => {
       <TableSection />
       <ActionHandler />
     </Wrapper>
-  );
-};
+  )
+}
 
 const Wrapper = styled.div`
   display: flex;
   gap: 18px;
   flex-direction: column;
   height: 100%;
-`;
+`
 
-export default BodySection;
+export default BodySection

@@ -8,26 +8,15 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import styled from "styled-components"
 
+import { ITEMS } from "../../constants/menu"
 import Logo from "../Logo"
 import SiderSelectSection from "../SiderSelectSection"
 import UploadZone from "../UploadZone"
 
 const { Header, Sider, Content } = Layout
-const menuItems = [
-  { label: "도서납품현황", path: "/a", key: "a", icon: <BookOutlined /> },
-  { label: "용역, 물품 납품", path: "/b", key: "b", icon: <BookOutlined /> },
-  { label: "장서점검+도서폐기", path: "/c", key: "c", icon: <BookOutlined /> },
-  {
-    label: "물류알바(대구, 창원, 대전)",
-    path: "/d",
-    key: "d",
-    icon: <BookOutlined />,
-  },
-  { label: "화물사용", path: "/e", key: "e", icon: <BookOutlined /> },
-]
 
 const MainLayout = ({ children }) => {
-  const [documentId, setDocumentId] = useState(null)
+  const [organizationId, setOrganizationId] = useState(null)
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const {
@@ -36,7 +25,7 @@ const MainLayout = ({ children }) => {
 
   const params = useParams()
   useEffect(() => {
-    setDocumentId(params.documentId)
+    setOrganizationId(params.organizationId)
   }, [params])
 
   const handleMenuClick = (item) => {
@@ -45,7 +34,7 @@ const MainLayout = ({ children }) => {
   }
 
   useEffect(() => {
-    navigate(`/${menuItems[0].key}`)
+    navigate(`/${ITEMS[0].key}`)
   }, [])
 
   return (
@@ -55,8 +44,8 @@ const MainLayout = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[documentId]}
-          items={menuItems}
+          selectedKeys={[organizationId]}
+          items={ITEMS}
           onClick={handleMenuClick}
           style={{ paddingTop: 46 }}
         />

@@ -1,16 +1,24 @@
-import { Button, Input, Table } from "antd";
-import throttle from "lodash.throttle";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import styled from "styled-components";
+import { Button, Input, Table } from "antd"
+import throttle from "lodash.throttle"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useDispatch } from "react-redux"
+import styled from "styled-components"
+import useSWR from "swr"
 
-import { setSelectedRow } from "../../store/selectedRows/selectedRowIdSlice";
-import { EditableCell, EditableRow } from "./Editable";
+import { useSheetId } from "../../hooks/useSheetId"
+import fetcher from "../../lib/fetcher"
+import { setSelectedRow } from "../../store/selectedRows/selectedRowIdSlice"
+import { EditableCell, EditableRow } from "./Editable"
 
-const ROW_HEIGHT = 55;
-const FOOTER_HEIGHT = 65;
-const HEADER_HEIGHT = 55;
+const ROW_HEIGHT = 55
+const FOOTER_HEIGHT = 65
+const HEADER_HEIGHT = 55
 const TableSection = () => {
+  const sheetId = useSheetId()
+
+  console.log("[TableSection] sheetId: ", sheetId)
+
+  const { data, error, mutate } = useSWR(`/sheets/${sheetId}/data`, fetcher)
   const [dataSource, setDataSource] = useState([
     {
       key: "0",
@@ -24,34 +32,34 @@ const TableSection = () => {
       age: "33",
       address: "London, Park Lane no. 1",
     },
-  ]);
-  const [rows, setRows] = useState(0);
-  const [count, setCount] = useState(2);
-  const containerRef = useRef(null);
-  const dispatch = useDispatch();
+  ])
+  const [rows, setRows] = useState(0)
+  const [count, setCount] = useState(2)
+  const containerRef = useRef(null)
+  const dispatch = useDispatch()
 
   const handleResize = useCallback(
     throttle(() => {
       if (containerRef.current) {
-        const containerHeight = containerRef.current.clientHeight;
-        const calcHeight = containerHeight - (FOOTER_HEIGHT + HEADER_HEIGHT);
-        const newRows = Math.floor(calcHeight / ROW_HEIGHT);
+        const containerHeight = containerRef.current.clientHeight
+        const calcHeight = containerHeight - (FOOTER_HEIGHT + HEADER_HEIGHT)
+        const newRows = Math.floor(calcHeight / ROW_HEIGHT)
 
-        setRows(() => newRows);
+        setRows(() => newRows)
       }
     }, 1000),
     []
-  );
+  )
 
   useEffect(() => {
-    handleResize();
+    handleResize()
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize)
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [])
 
   const defaultColumns = [
     {
@@ -74,10 +82,7 @@ const TableSection = () => {
       // filterMode: "tree",
       filterSearch: true,
       onFilter: (value, record) => {
-        console.log("record: ", record);
-        console.log("value: ", value);
-        console.log("what?? ", record.name.startsWith(value));
-        return record.address.startsWith(value);
+        return record.address.startsWith(value)
       },
       filters: [
         {
@@ -90,7 +95,7 @@ const TableSection = () => {
         },
       ],
     },
-  ];
+  ]
 
   const handleAdd = () => {
     const newData = {
@@ -98,32 +103,32 @@ const TableSection = () => {
       name: "-",
       age: "-",
       address: "-",
-    };
-    setDataSource([...dataSource, newData]);
-    setCount(count + 1);
-  };
+    }
+    setDataSource([...dataSource, newData])
+    setCount(count + 1)
+  }
 
   const handleSave = (row) => {
-    const newData = [...dataSource];
-    const index = newData.findIndex((item) => row.key === item.key);
-    const item = newData[index];
+    const newData = [...dataSource]
+    const index = newData.findIndex((item) => row.key === item.key)
+    const item = newData[index]
     newData.splice(index, 1, {
       ...item,
       ...row,
-    });
-    setDataSource(newData);
-  };
+    })
+    setDataSource(newData)
+  }
 
   const components = {
     body: {
       row: EditableRow,
       cell: EditableCell,
     },
-  };
+  }
 
   const columns = defaultColumns.map((col) => {
     if (!col.editable) {
-      return col;
+      return col
     }
     return {
       ...col,
@@ -135,10 +140,10 @@ const TableSection = () => {
           dataIndex: col.dataIndex,
           title: col.title,
           handleSave,
-        };
+        }
       },
-    };
-  });
+    }
+  })
 
   return (
     <Wrapper ref={containerRef}>
@@ -154,15 +159,15 @@ const TableSection = () => {
               `selectedRowKeys: ${selectedRowKeys}`,
               "selectedRows: ",
               selectedRows
-            );
-            dispatch(setSelectedRow(selectedRows));
+            )
+            dispatch(setSelectedRow(selectedRows))
           },
           getCheckboxProps: (record) => {
             return {
               disabled: record.name === "Disabled User",
               // Column configuration not to be checked
               name: record.name,
-            };
+            }
           },
         }}
         components={components}
@@ -176,8 +181,8 @@ const TableSection = () => {
         )}
       />
     </Wrapper>
-  );
-};
+  )
+}
 
 const Wrapper = styled.div`
   flex: 1;
@@ -197,10 +202,10 @@ const Wrapper = styled.div`
   & .ant-table-footer {
     background-color: transparent !important;
   }
-`;
+`
 
 const ButtonWrapper = styled(Button)`
   width: 100%;
-`;
+`
 
-export default TableSection;
+export default TableSection
