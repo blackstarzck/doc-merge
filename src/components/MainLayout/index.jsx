@@ -8,7 +8,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import styled from "styled-components"
 
-import { ITEMS } from "../../constants/menu"
+import { OVERVIEW_TABLES } from "../../constants/menu"
 import Logo from "../Logo"
 import SiderSelectSection from "../SiderSelectSection"
 import UploadZone from "../UploadZone"
@@ -16,7 +16,7 @@ import UploadZone from "../UploadZone"
 const { Header, Sider, Content } = Layout
 
 const MainLayout = ({ children }) => {
-  const [organizationId, setOrganizationId] = useState(null)
+  const [documentId, setDocumentId] = useState(OVERVIEW_TABLES[0].key)
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const {
@@ -24,18 +24,11 @@ const MainLayout = ({ children }) => {
   } = theme.useToken()
 
   const params = useParams()
-  useEffect(() => {
-    setOrganizationId(params.organizationId)
-  }, [params])
-
-  const handleMenuClick = (item) => {
-    console.log("path: ", item)
-    navigate(`/${item.key}`)
-  }
 
   useEffect(() => {
-    navigate(`/${ITEMS[0].key}`)
-  }, [])
+    navigate(`/${documentId}`)
+    console.log("MainLayout useEffect: ", documentId)
+  }, [documentId])
 
   return (
     <Layout style={{ height: "100vh" }}>
@@ -44,12 +37,12 @@ const MainLayout = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[organizationId]}
-          items={ITEMS}
-          onClick={handleMenuClick}
+          selectedKeys={[documentId]}
+          items={OVERVIEW_TABLES}
+          onSelect={({ key }) => setDocumentId(key)}
           style={{ paddingTop: 46 }}
         />
-        <SiderSelectSection />
+        <SiderSelectSection setDocumentId={setDocumentId} />
         <UploadZone />
       </Sider>
       <Layout>

@@ -6,20 +6,13 @@ import useSWR from "swr"
 
 import fetcher from "../../lib/fetcher"
 
-const SiderSelectSection = () => {
+const SiderSelectSection = ({ setDocumentId }) => {
   const [isSelected, setIsSelected] = useState(false)
-  const { data, error, mutate } = useSWR("/sheets", fetcher)
+  const { data, error, mutate } = useSWR("/organizations/names", fetcher)
   const navigate = useNavigate()
   const {
     token: { colorPrimary },
   } = theme.useToken()
-
-  const onChange = (value) => {
-    console.log(`selected ${value}`)
-    setIsSelected(true)
-    navigate(`./${value}`)
-  }
-  const onSearch = (value) => {}
 
   useEffect(() => {}, [])
 
@@ -33,11 +26,10 @@ const SiderSelectSection = () => {
         $primary={colorPrimary}
         placeholder="문서를 선택해주세요"
         optionFilterProp="label"
-        onChange={onChange}
-        onSearch={onSearch}
-        options={data?.map((sheet) => ({
-          value: sheet.id,
-          label: sheet.name,
+        onChange={(value) => setDocumentId(value)}
+        options={data?.map((organization) => ({
+          value: organization.id,
+          label: organization.name,
         }))}
       />
     </Wrapper>

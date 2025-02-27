@@ -13,7 +13,6 @@ const UploadZone = () => {
     multiple: false,
     // accept: ".xlsx, .xls",
     showUploadList: false,
-    action: "http://localhost:3000/organizations",
     beforeUpload: (file) => {
       console.log("beforeUpload: ", file)
 
@@ -40,7 +39,7 @@ const UploadZone = () => {
 
       try {
         const response = await axios.post(
-          "http://localhost:3000/organizations",
+          "http://localhost:3000/upload",
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },

@@ -1,11 +1,13 @@
 import { Button, Input, Table } from "antd"
+import isEqual from "lodash.isequal"
 import throttle from "lodash.throttle"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch } from "react-redux"
 import styled from "styled-components"
 import useSWR from "swr"
 
-import { useSheetId } from "../../hooks/useSheetId"
+import { useDocumentId } from "../../hooks/useDocumentId"
+import useSelectedColumns from "../../hooks/useSelectedColumns"
 import fetcher from "../../lib/fetcher"
 import { setSelectedRow } from "../../store/selectedRows/selectedRowIdSlice"
 import { EditableCell, EditableRow } from "./Editable"
@@ -13,28 +15,15 @@ import { EditableCell, EditableRow } from "./Editable"
 const ROW_HEIGHT = 55
 const FOOTER_HEIGHT = 65
 const HEADER_HEIGHT = 55
+
 const TableSection = () => {
-  const sheetId = useSheetId()
-
-  console.log("[TableSection] sheetId: ", sheetId)
-
-  const { data, error, mutate } = useSWR(`/sheets/${sheetId}/data`, fetcher)
-  const [dataSource, setDataSource] = useState([
-    {
-      key: "0",
-      name: "Edward King 0",
-      age: "32",
-      address: "London, Park Lane no. 0",
-    },
-    {
-      key: "1",
-      name: "Edward King 1",
-      age: "33",
-      address: "London, Park Lane no. 1",
-    },
-  ])
-  const [rows, setRows] = useState(0)
-  const [count, setCount] = useState(2)
+  const documentId = useDocumentId()
+  const selectedColumns = useSelectedColumns()
+  const { data, error, mutate } = useSWR(`/${documentId}`, fetcher)
+  const [dataSource, setDataSource] = useState([])
+  const [columns, setColumns] = useState([])
+  const [rows, setRows] = useState(0) // 화면이 resize 될 때 마다 Table 컴포넌트 옵션으로 넣어줘야 overflow-y 스크롤이 생김 (row 갯수 필수 옵션임...)
+  const [count, setCount] = useState(2) // Add a row 버튼 클릭 시 key 값으로 사용
   const containerRef = useRef(null)
   const dispatch = useDispatch()
 
@@ -51,6 +40,76 @@ const TableSection = () => {
     []
   )
 
+  const handleSave = useCallback((row) => {
+    console.log("row: ", row)
+
+    setDataSource((prevData) => {
+      const index = prevData.findIndex((item) => item.id === row.id)
+
+      if (index > -1) {
+        const copy = [...prevData]
+        const match = prevData.find((item) => item.id === row.id)
+        const newRow = { ...match, ...row }
+
+        copy.splice(index, 1, newRow)
+        return copy
+      }
+      return prevData
+    })
+  }, [])
+
+  const generateColumns = useCallback((data, selectedColumns, handleSave) => {
+    const filterMap = {}
+    data?.forEach((row) => {
+      selectedColumns.forEach((column) => {
+        const key = column.key
+        if (row[key]) {
+          filterMap[key] = filterMap[key] || new Set()
+          filterMap[key].add(row[key])
+        }
+      })
+    })
+
+    return selectedColumns.map((column) => {
+      const filters = filterMap[column.key]
+        ? Array.from(filterMap[column.key]).map((value) => ({
+            text: value,
+            value,
+          }))
+        : []
+      const baseColumn = {
+        editable: true,
+        title: column.name,
+        dataIndex: column.key,
+        sorter: (a, b) => {},
+        filter: (value, record) => {},
+        filters,
+        shouldCellUpdate: (record, prevRecord) => !isEqual(record, prevRecord),
+      }
+      return baseColumn.editable
+        ? {
+            ...baseColumn,
+            onCell: (record) => ({
+              key: record.key,
+              record,
+              editable: baseColumn.editable,
+              dataIndex: baseColumn.dataIndex,
+              title: baseColumn.title,
+              handleSave,
+            }),
+          }
+        : baseColumn
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!dataSource.length && data) {
+      setDataSource(data)
+    }
+    const newColumns = generateColumns(data, selectedColumns, handleSave)
+    setColumns(newColumns)
+  }, [data, selectedColumns, handleSave])
+
   useEffect(() => {
     handleResize()
 
@@ -61,105 +120,45 @@ const TableSection = () => {
     }
   }, [])
 
-  const defaultColumns = [
-    {
-      title: "name",
-      dataIndex: "name",
-      editable: true,
-      fixed: "left",
-      sorter: (a, b) => a.name.localeCompare(b.name),
-    },
-    {
-      title: "age",
-      dataIndex: "age",
-      editable: true,
-      sorter: (a, b) => a.age - b.age,
-    },
-    {
-      title: "address",
-      dataIndex: "address",
-      editable: true,
-      // filterMode: "tree",
-      filterSearch: true,
-      onFilter: (value, record) => {
-        return record.address.startsWith(value)
-      },
-      filters: [
-        {
-          text: "London, Park Lane no. 0",
-          value: "London, Park Lane no. 0",
-        },
-        {
-          text: "London, Park Lane no. 1",
-          value: "London, Park Lane no. 1",
-        },
-      ],
-    },
-  ]
-
   const handleAdd = () => {
-    const newData = {
-      key: count,
-      name: "-",
-      age: "-",
-      address: "-",
+    const newData = { id: `temp-${count}` }
+
+    for (const elem of selectedColumns) {
+      newData[elem.key] = ""
     }
+
     setDataSource([...dataSource, newData])
     setCount(count + 1)
   }
 
-  const handleSave = (row) => {
-    const newData = [...dataSource]
-    const index = newData.findIndex((item) => row.key === item.key)
-    const item = newData[index]
-    newData.splice(index, 1, {
-      ...item,
-      ...row,
-    })
-    setDataSource(newData)
-  }
-
-  const components = {
-    body: {
-      row: EditableRow,
-      cell: EditableCell,
-    },
-  }
-
-  const columns = defaultColumns.map((col) => {
-    if (!col.editable) {
-      return col
-    }
-    return {
-      ...col,
-      onCell: (record) => {
-        return {
-          // EditableCell 컴포넌트에 props로 전달됨
-          record,
-          editable: col.editable,
-          dataIndex: col.dataIndex,
-          title: col.title,
-          handleSave,
-        }
+  const components = useMemo(
+    () => ({
+      body: {
+        row: EditableRow,
+        cell: EditableCell,
       },
-    }
-  })
+    }),
+    []
+  )
+
+  console.log(
+    `dataSource: ${dataSource.length}, 
+    columns: ${columns.length}, 
+    selectedColumns: ${selectedColumns.length}, 
+    documentId: ${documentId}`
+  )
 
   return (
     <Wrapper ref={containerRef}>
       <Table
         bordered
-        tableLayout="auto"
         pagination={false}
-        scroll={{ x: "max-content", y: ROW_HEIGHT * rows }}
+        tableLayout="auto"
+        shouldCellUpdate
+        scroll={{ x: 8000, y: ROW_HEIGHT * rows }}
         rowSelection={{
           type: "checkbox",
           onChange: (selectedRowKeys, selectedRows) => {
-            console.log(
-              `selectedRowKeys: ${selectedRowKeys}`,
-              "selectedRows: ",
-              selectedRows
-            )
             dispatch(setSelectedRow(selectedRows))
           },
           getCheckboxProps: (record) => {
@@ -171,7 +170,10 @@ const TableSection = () => {
           },
         }}
         components={components}
-        dataSource={dataSource}
+        dataSource={dataSource.map((item) => ({
+          ...item,
+          key: item.id,
+        }))}
         columns={columns}
         rowClassName={() => "editable-row"}
         footer={() => (

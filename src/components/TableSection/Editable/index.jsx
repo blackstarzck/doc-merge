@@ -1,27 +1,23 @@
-import { Form, Input } from "antd";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import { Form, Input } from "antd"
+import isEqual from "lodash.isequal"
+import React, { useContext, useEffect, useRef, useState } from "react"
+import styled from "styled-components"
 
-const EditableContext = React.createContext(null);
+const EditableContext = React.createContext(null)
 
 export const EditableRow = ({ ...props }) => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
 
   return (
-    <Form
-      form={form}
-      component={false}
-      name={`row-${props["data-row-key"]}`}
-      autoComplete="off"
-    >
+    <Form form={form} component={false} autoComplete="off">
       <EditableContext.Provider value={form}>
         <tr {...props} />
       </EditableContext.Provider>
     </Form>
-  );
-};
+  )
+}
 
-export const EditableCell = ({
+const EditableCellComponent = ({
   title,
   editable,
   children,
@@ -30,90 +26,84 @@ export const EditableCell = ({
   handleSave,
   ...restProps
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const inputRef = useRef(null);
-  const form = useContext(EditableContext);
+  const [isEditing, setIsEditing] = useState(false)
+  const inputRef = useRef(null)
+  const form = useContext(EditableContext)
+
+  console.log("yes?")
 
   useEffect(() => {
-    setFieldValues(); ///
-  }, []);
+    setFieldValues()
+  }, [])
 
   useEffect(() => {
-    if (isEditing) inputRef.current?.focus();
-  }, [isEditing]);
+    if (isEditing) inputRef.current?.focus()
+  }, [isEditing])
 
   const toggleEdit = (isVisible) => {
-    if (isEditing === isVisible) return;
+    if (isEditing === isVisible) return
+    setIsEditing(isVisible)
+  }
 
-    setIsEditing(() => isVisible);
-  };
+  const setFieldValues = () => {
+    if (!dataIndex) return
+    form.setFieldsValue({ [dataIndex]: record[dataIndex] })
+  }
 
-  const setFieldValues = (data) => {
-    if (!dataIndex) return;
-
-    const value = data ?? record[dataIndex];
-
-    form.setFieldsValue({
-      [dataIndex]: value,
-    });
-  };
-
-  const isSaving = useRef(false);
+  const isSaving = useRef(false)
   const save = async () => {
-    if (isSaving.current) return; // 이미 실행 중이면 return
-    isSaving.current = true; // 실행 시작
+    if (isSaving.current) return
+    isSaving.current = true
 
     try {
-      const values = await form.validateFields();
-      // toggleEdit();
-      handleSave({ ...record, ...values });
-      console.log("cell values: ", values);
+      const values = await form.validateFields()
+      handleSave({ ...record, ...values })
+      console.log("save: ", record, values)
     } catch (errInfo) {
-      console.log("Save failed:", errInfo);
+      console.log("Save failed:", errInfo)
     } finally {
       setTimeout(() => {
-        isSaving.current = false; // 일정 시간 후 다시 실행 가능
-      }, 100);
+        isSaving.current = false
+      }, 100)
     }
-  };
+  }
+
   return (
     <Wrapper
       className="ant-table-cell ant-table-selection-column"
-      $isCheckBox={dataIndex ? false : true}
+      $isCheckBox={!dataIndex}
     >
       {dataIndex && (
         <InputWrapper $isEditing={isEditing}>
           <Form.Item style={{ margin: 0 }} name={dataIndex} rules={[]}>
             <Input
               ref={inputRef}
-              onChange={(e) => {}}
               onPressEnter={() => {
-                save();
-                toggleEdit(true);
+                save()
+                toggleEdit(true)
               }}
               onBlur={() => {
-                save();
-                toggleEdit(false);
+                save()
+                toggleEdit(false)
               }}
-              onFocus={(e) => {
-                toggleEdit(true);
-              }}
+              onFocus={() => toggleEdit(true)}
             />
           </Form.Item>
         </InputWrapper>
       )}
-
-      <TextWrapper
-        $isEditing={isEditing}
-        onClick={(e) => {
-          toggleEdit(true);
-        }}
-      >
+      <TextWrapper $isEditing={isEditing} onClick={() => toggleEdit(true)}>
         {children}
       </TextWrapper>
     </Wrapper>
-  );
-};
+  )
+}
+
+export const EditableCell = React.memo(
+  EditableCellComponent,
+  (prevProps, nextProps) => {
+    return isEqual(prevProps.record, nextProps.record)
+  }
+)
 
 const Wrapper = styled.td`
   position: relative;
@@ -132,15 +122,15 @@ const Wrapper = styled.td`
     justify-content: ${({ $isCheckBox }) =>
       $isCheckBox ? "center" : "flex-start"};
   }
-`;
+`
 
 const InputWrapper = styled.div`
   z-index: ${({ $isEditing }) => ($isEditing ? 1 : -1)};
-`;
+`
 
 const TextWrapper = styled.div`
   width: 100%;
   /* background-color: #ffffff; */
   z-index: ${({ $isEditing }) => ($isEditing ? 0 : 1)};
   cursor: pointer;
-`;
+`
