@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit"
 
+import documentSliceReducer from "./document/documentSlice"
 import thunk from "./middleware/thunk"
 import modalsSliceReducer from "./modals/modalsSlice"
-import organizationsSliceReducer from "./organizations/organizationsSlice"
 import selectedRowSliceReducer from "./selectedRows/selectedRowIdSlice"
 
 export default configureStore({
   reducer: {
-    organizations: organizationsSliceReducer,
+    document: documentSliceReducer,
     selectedRows: selectedRowSliceReducer,
     modals: modalsSliceReducer,
   },

@@ -101,7 +101,11 @@ const EditableCellComponent = ({
 export const EditableCell = React.memo(
   EditableCellComponent,
   (prevProps, nextProps) => {
-    return isEqual(prevProps.record, nextProps.record)
+    return (
+      prevProps.record &&
+      nextProps.record &&
+      isEqual(prevProps.record, nextProps.record)
+    )
   }
 )
 

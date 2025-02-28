@@ -9,6 +9,7 @@ import useSWR from "swr"
 import { useDocumentId } from "../../hooks/useDocumentId"
 import useSelectedColumns from "../../hooks/useSelectedColumns"
 import fetcher from "../../lib/fetcher"
+import { setDocument } from "../../store/document/documentSlice"
 import { setSelectedRow } from "../../store/selectedRows/selectedRowIdSlice"
 import { EditableCell, EditableRow } from "./Editable"
 
@@ -41,8 +42,6 @@ const TableSection = () => {
   )
 
   const handleSave = useCallback((row) => {
-    console.log("row: ", row)
-
     setDataSource((prevData) => {
       const index = prevData.findIndex((item) => item.id === row.id)
 
@@ -86,26 +85,26 @@ const TableSection = () => {
         filters,
         shouldCellUpdate: (record, prevRecord) => !isEqual(record, prevRecord),
       }
-      return baseColumn.editable
-        ? {
-            ...baseColumn,
-            onCell: (record) => ({
-              key: record.key,
-              record,
-              editable: baseColumn.editable,
-              dataIndex: baseColumn.dataIndex,
-              title: baseColumn.title,
-              handleSave,
-            }),
-          }
-        : baseColumn
+      return baseColumn
+      // return baseColumn.editable
+      //   ? {
+      //       ...baseColumn,
+      //       onCell: (record) => ({
+      //         key: record.key,
+      //         record,
+      //         editable: baseColumn.editable,
+      //         dataIndex: baseColumn.dataIndex,
+      //         title: baseColumn.title,
+      //         handleSave,
+      //       }),
+      //     }
+      //   : baseColumn
     })
   }, [])
 
   useEffect(() => {
-    if (!dataSource.length && data) {
-      setDataSource(data)
-    }
+    if (!dataSource.length && data) setDataSource(data)
+
     const newColumns = generateColumns(data, selectedColumns, handleSave)
     setColumns(newColumns)
   }, [data, selectedColumns, handleSave])
@@ -119,6 +118,13 @@ const TableSection = () => {
       window.removeEventListener("resize", handleResize)
     }
   }, [])
+
+  useEffect(() => {
+    if (dataSource.length > 0 && data) {
+      console.log("Data: ", data)
+      dispatch(setDocument(data))
+    }
+  }, [dataSource])
 
   const handleAdd = () => {
     const newData = { id: `temp-${count}` }
@@ -159,6 +165,7 @@ const TableSection = () => {
         rowSelection={{
           type: "checkbox",
           onChange: (selectedRowKeys, selectedRows) => {
+            console.log("selectedRows: ", selectedRowKeys.join(", "))
             dispatch(setSelectedRow(selectedRows))
           },
           getCheckboxProps: (record) => {
@@ -169,7 +176,7 @@ const TableSection = () => {
             }
           },
         }}
-        components={components}
+        // components={components}
         dataSource={dataSource.map((item) => ({
           ...item,
           key: item.id,
