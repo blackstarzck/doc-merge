@@ -1,12 +1,12 @@
-import { Form, Input } from "antd"
-import isEqual from "lodash.isequal"
-import React, { useContext, useEffect, useRef, useState } from "react"
-import styled from "styled-components"
+import { Form, Input } from "antd";
+import isEqual from "lodash.isequal";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 
-const EditableContext = React.createContext(null)
+const EditableContext = React.createContext(null);
 
 export const EditableRow = ({ ...props }) => {
-  const [form] = Form.useForm()
+  const [form] = Form.useForm();
 
   return (
     <Form form={form} component={false} autoComplete="off">
@@ -14,8 +14,8 @@ export const EditableRow = ({ ...props }) => {
         <tr {...props} />
       </EditableContext.Provider>
     </Form>
-  )
-}
+  );
+};
 
 const EditableCellComponent = ({
   title,
@@ -26,47 +26,47 @@ const EditableCellComponent = ({
   handleSave,
   ...restProps
 }) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const inputRef = useRef(null)
-  const form = useContext(EditableContext)
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef(null);
+  const form = useContext(EditableContext);
 
-  console.log("yes?")
-
-  useEffect(() => {
-    setFieldValues()
-  }, [])
+  console.log("yes?");
 
   useEffect(() => {
-    if (isEditing) inputRef.current?.focus()
-  }, [isEditing])
+    setFieldValues();
+  }, []);
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus();
+  }, [isEditing]);
 
   const toggleEdit = (isVisible) => {
-    if (isEditing === isVisible) return
-    setIsEditing(isVisible)
-  }
+    if (isEditing === isVisible) return;
+    setIsEditing(isVisible);
+  };
 
   const setFieldValues = () => {
-    if (!dataIndex) return
-    form.setFieldsValue({ [dataIndex]: record[dataIndex] })
-  }
+    if (!dataIndex) return;
+    form.setFieldsValue({ [dataIndex]: record[dataIndex] });
+  };
 
-  const isSaving = useRef(false)
+  const isSaving = useRef(false);
   const save = async () => {
-    if (isSaving.current) return
-    isSaving.current = true
+    if (isSaving.current) return;
+    isSaving.current = true;
 
     try {
-      const values = await form.validateFields()
-      handleSave({ ...record, ...values })
-      console.log("save: ", record, values)
+      const values = await form.validateFields();
+      handleSave({ ...record, ...values });
+      console.log("save: ", { ...record, ...values });
     } catch (errInfo) {
-      console.log("Save failed:", errInfo)
+      console.log("Save failed:", errInfo);
     } finally {
       setTimeout(() => {
-        isSaving.current = false
-      }, 100)
+        isSaving.current = false;
+      }, 100);
     }
-  }
+  };
 
   return (
     <Wrapper
@@ -79,12 +79,12 @@ const EditableCellComponent = ({
             <Input
               ref={inputRef}
               onPressEnter={() => {
-                save()
-                toggleEdit(true)
+                save();
+                toggleEdit(true);
               }}
               onBlur={() => {
-                save()
-                toggleEdit(false)
+                save();
+                toggleEdit(false);
               }}
               onFocus={() => toggleEdit(true)}
             />
@@ -95,8 +95,8 @@ const EditableCellComponent = ({
         {children}
       </TextWrapper>
     </Wrapper>
-  )
-}
+  );
+};
 
 export const EditableCell = React.memo(
   EditableCellComponent,
@@ -105,9 +105,9 @@ export const EditableCell = React.memo(
       prevProps.record &&
       nextProps.record &&
       isEqual(prevProps.record, nextProps.record)
-    )
+    );
   }
-)
+);
 
 const Wrapper = styled.td`
   position: relative;
@@ -126,15 +126,15 @@ const Wrapper = styled.td`
     justify-content: ${({ $isCheckBox }) =>
       $isCheckBox ? "center" : "flex-start"};
   }
-`
+`;
 
 const InputWrapper = styled.div`
   z-index: ${({ $isEditing }) => ($isEditing ? 1 : -1)};
-`
+`;
 
 const TextWrapper = styled.div`
   width: 100%;
   /* background-color: #ffffff; */
   z-index: ${({ $isEditing }) => ($isEditing ? 0 : 1)};
   cursor: pointer;
-`
+`;
