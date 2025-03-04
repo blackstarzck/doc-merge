@@ -1,12 +1,7 @@
-import {
-  BookOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from "@ant-design/icons"
+import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons"
 import { Button, Layout, Menu, theme } from "antd"
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import styled from "styled-components"
 
 import { OVERVIEW_TABLES } from "../../constants/menu"
 import Logo from "../Logo"
@@ -16,7 +11,7 @@ import UploadZone from "../UploadZone"
 const { Header, Sider, Content } = Layout
 
 const MainLayout = ({ children }) => {
-  const [documentId, setDocumentId] = useState(OVERVIEW_TABLES[0].key)
+  const [documentId, setDocumentId] = useState(null)
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const {
@@ -26,7 +21,7 @@ const MainLayout = ({ children }) => {
   const params = useParams()
 
   useEffect(() => {
-    navigate(`/${documentId}`)
+    if (documentId) navigate(`/${documentId}`)
     console.log("MainLayout useEffect: ", documentId)
   }, [documentId])
 
@@ -37,8 +32,10 @@ const MainLayout = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[documentId]}
-          items={OVERVIEW_TABLES}
+          selectedKeys={[params.documentId]}
+          items={OVERVIEW_TABLES.filter((table) => !table.hide).map(
+            (table) => ({ label: table.label, key: table.key })
+          )} // Add items prop
           onSelect={({ key }) => setDocumentId(key)}
           style={{ paddingTop: 46 }}
         />
@@ -81,7 +78,5 @@ const MainLayout = ({ children }) => {
     </Layout>
   )
 }
-
-const HeaderWrapper = styled(Header)``
 
 export default MainLayout
