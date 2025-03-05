@@ -6,8 +6,7 @@ axios.defaults.baseURL = API_BASE_URL
 
 // 팩토리 함수
 const createPostApi = (endpoint) => {
-  return (payload) => {
-    const { document } = payload
+  return (document) => {
     return axios.post(`/${endpoint}`, { document }).then((res) => res.data)
   }
 }

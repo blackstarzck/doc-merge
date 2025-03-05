@@ -1,12 +1,20 @@
-import { Button } from "antd"
+import { App, Button, Popconfirm } from "antd"
 import styled from "styled-components"
 
-const ActionHandler = ({ onRemoveRow, onSave }) => {
+const ActionHandler = ({ selected, onRemoveRows, onSave }) => {
   return (
     <Wrapper>
-      <Button size="large" danger type="text" onClick={onRemoveRow}>
-        삭제
-      </Button>
+      <Popconfirm
+        title="삭제하시겠습니까?"
+        onConfirm={onRemoveRows}
+        okText="Yes"
+        cancelText="No"
+      >
+        <Button disabled={!selected.length} size="large" danger type="text">
+          삭제
+        </Button>
+      </Popconfirm>
+
       <Button size="large" type="primary" onClick={onSave}>
         저장
       </Button>
@@ -14,7 +22,7 @@ const ActionHandler = ({ onRemoveRow, onSave }) => {
   )
 }
 
-const Wrapper = styled.div`
+const Wrapper = styled(App)`
   width: 100%;
   display: flex;
   justify-content: space-between;

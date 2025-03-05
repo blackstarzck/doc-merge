@@ -4,28 +4,34 @@ import {
   createSlice,
 } from "@reduxjs/toolkit"
 
-import { getApi, postApi } from "../../api"
+import { deleteApi, getApi, postApi } from "../../api"
 
 // Thunks
 export const getDocument = createAsyncThunk("document/get", async (payload) => {
-  const response = await getApi[payload.documentId]()
-  return response
+  return await getApi[payload.documentId]()
 })
 
 export const updateDocument = createAsyncThunk(
   "document/update",
   async (payload) => {
+    const { documentId, document } = payload
     console.log("update payload: ", payload)
-    const response = await postApi[payload.documentId](payload).then((res) => {
-      console.log("update response: ", res)
-    })
-    return response
+    return await postApi[documentId](document)
+  }
+)
+
+export const deleteDocument = createAsyncThunk(
+  "document/delete",
+  async (payload) => {
+    const { documentId, ids } = payload
+    console.log("delete payload: ", payload)
+    return await deleteApi[documentId](ids)
   }
 )
 
 // Adapter
 const documentAdapter = createEntityAdapter({
-  selectId: (doc) => doc.id,
+  selectId: (doc) => doc?.id,
 })
 
 // Initial State
@@ -66,6 +72,7 @@ export const documentSlice = createSlice({
       })
       .addCase(updateDocument.fulfilled, (state, action) => {
         state.post.loading = false
+        console.log("updateDocument fulfilled action.payload:", action.payload)
         documentAdapter.upsertMany(state, action.payload) // 배열로 추가/업데이트
       })
       .addCase(updateDocument.rejected, (state, action) => {
