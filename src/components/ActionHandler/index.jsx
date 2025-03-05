@@ -1,5 +1,5 @@
-import { App, Button, Popconfirm } from "antd"
-import styled from "styled-components"
+import { Button, Popconfirm } from "antd";
+import styled from "styled-components";
 
 const ActionHandler = ({ selected, onRemoveRows, onSave }) => {
   return (
@@ -19,13 +19,13 @@ const ActionHandler = ({ selected, onRemoveRows, onSave }) => {
         저장
       </Button>
     </Wrapper>
-  )
-}
+  );
+};
 
-const Wrapper = styled(App)`
+const Wrapper = styled.div`
   width: 100%;
   display: flex;
   justify-content: space-between;
-`
+`;
 
-export default ActionHandler
+export default ActionHandler;

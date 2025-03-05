@@ -2,43 +2,43 @@ import {
   createAsyncThunk,
   createEntityAdapter,
   createSlice,
-} from "@reduxjs/toolkit"
+} from "@reduxjs/toolkit";
 
-import { deleteApi, getApi, postApi } from "../../api"
+import { deleteApi, getApi, postApi } from "../../api";
 
 // Thunks
 export const getDocument = createAsyncThunk("document/get", async (payload) => {
-  return await getApi[payload.documentId]()
-})
+  return await getApi[payload.documentId]();
+});
 
 export const updateDocument = createAsyncThunk(
   "document/update",
   async (payload) => {
-    const { documentId, document } = payload
-    console.log("update payload: ", payload)
-    return await postApi[documentId](document)
+    const { documentId, document } = payload;
+    console.log("update payload: ", payload);
+    return await postApi[documentId](document);
   }
-)
+);
 
 export const deleteDocument = createAsyncThunk(
   "document/delete",
   async (payload) => {
-    const { documentId, ids } = payload
-    console.log("delete payload: ", payload)
-    return await deleteApi[documentId](ids)
+    const { documentId, ids } = payload;
+    console.log("delete payload: ", payload);
+    return await deleteApi[documentId](ids);
   }
-)
+);
 
 // Adapter
 const documentAdapter = createEntityAdapter({
-  selectId: (doc) => doc?.id,
-})
+  selectId: (doc) => doc.id,
+});
 
 // Initial State
 const initialState = documentAdapter.getInitialState({
   get: { loading: false, error: null },
   post: { loading: false, error: null },
-})
+});
 
 // Slice
 export const documentSlice = createSlice({
@@ -52,44 +52,44 @@ export const documentSlice = createSlice({
     // GET
     builder
       .addCase(getDocument.pending, (state) => {
-        state.get.loading = true
-        state.get.error = null
+        state.get.loading = true;
+        state.get.error = null;
       })
       .addCase(getDocument.fulfilled, (state, action) => {
-        state.get.loading = false
-        documentAdapter.setAll(state, action.payload) // 배열로 전체 설정
+        console.log("getDocument payload:", action.payload);
+        state.get.loading = false;
+        documentAdapter.setAll(state, action.payload); // 배열로 전체 설정
       })
       .addCase(getDocument.rejected, (state, action) => {
-        state.get.loading = false
-        state.get.error = action.payload ?? "Failed to get document"
-      })
+        state.get.loading = false;
+        state.get.error = action.payload ?? "Failed to get document";
+      });
 
     // POST
     builder
       .addCase(updateDocument.pending, (state) => {
-        state.post.loading = true
-        state.post.error = null
+        state.post.loading = true;
+        state.post.error = null;
       })
       .addCase(updateDocument.fulfilled, (state, action) => {
-        state.post.loading = false
-        console.log("updateDocument fulfilled action.payload:", action.payload)
-        documentAdapter.upsertMany(state, action.payload) // 배열로 추가/업데이트
+        state.post.loading = false;
+        documentAdapter.upsertMany(state, action.payload.data); // 배열로 추가/업데이트
       })
       .addCase(updateDocument.rejected, (state, action) => {
-        state.post.loading = false
-        state.post.error = action.payload ?? "Failed to update document"
-      })
+        state.post.loading = false;
+        state.post.error = action.payload ?? "Failed to update document";
+      });
   },
-})
+});
 
 // Action creators
-export const { setDocuments, addDocuments } = documentSlice.actions
+export const { setDocuments, addDocuments } = documentSlice.actions;
 
 // Selectors
 export const {
   selectAll: selectAllDocuments,
   selectById: selectDocumentById,
   selectIds: selectDocumentIds,
-} = documentAdapter.getSelectors((state) => state.document)
+} = documentAdapter.getSelectors((state) => state.document);
 
-export default documentSlice.reducer
+export default documentSlice.reducer;

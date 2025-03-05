@@ -1,62 +1,60 @@
-import { UploadOutlined } from "@ant-design/icons"
-import { message, Upload } from "antd"
-import axios from "axios"
-import styled from "styled-components"
+import { UploadOutlined } from "@ant-design/icons";
+import { message, Upload } from "antd";
+import axios from "axios";
+import styled from "styled-components";
 
-const { Dragger } = Upload
+import { API_BASE_URL } from "../../constants/config";
+import { useDocumentId } from "../../hooks/useDocumentId";
+
+const { Dragger } = Upload;
 
 const UploadZone = () => {
-  const [messageApi, contextHolder] = message.useMessage()
-
+  const { documentId, organizationId } = useDocumentId();
+  const [messageApi, contextHolder] = message.useMessage();
   const props = {
     name: "file",
     multiple: false,
     // accept: ".xlsx, .xls",
     showUploadList: false,
     beforeUpload: (file) => {
-      console.log("beforeUpload: ", file)
-
       const isExcel =
         file.type ===
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         file.type === "application/vnd.ms-excel" ||
         file.name.endsWith(".xlsx") ||
-        file.name.endsWith(".xls")
+        file.name.endsWith(".xls");
 
       if (!isExcel) {
         messageApi.open({
           type: "error",
           content: "엑셀 파일만 업로드할 수 있습니다.",
-        })
-        return false
+        });
+        return false;
       }
 
-      return true
+      return true;
     },
     customRequest: async ({ file, onSuccess, onError }) => {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       try {
         const response = await axios.post(
-          "http://localhost:3000/upload",
+          `${API_BASE_URL}/upload/${documentId || organizationId}`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
           }
-        )
-        messageApi.open({ type: "success", content: "파일 업로드 성공!" })
-        console.log("response data: ", response.data)
-        onSuccess(response.data)
+        );
+        messageApi.open({ type: "success", content: "파일 업로드 성공!" });
+        onSuccess(response.data);
       } catch (error) {
-        messageApi.open({ type: "error", content: "파일 업로드 실패." })
-        onError(error)
+        messageApi.open({ type: "error", content: "파일 업로드 실패." });
+        onError(error);
       }
     },
-    onDrop(e) {
-      console.log("Dropped files", e.dataTransfer.files)
-    },
-  }
+    onDrop(e) {},
+  };
 
   return (
     <Wrapper>
@@ -68,8 +66,8 @@ const UploadZone = () => {
         </InnerWrapper>
       </Dragger>
     </Wrapper>
-  )
-}
+  );
+};
 
 const Wrapper = styled.div`
   position: absolute;
@@ -78,13 +76,13 @@ const Wrapper = styled.div`
   right: 0;
   margin: auto;
   padding: 10px;
-`
+`;
 
 const InnerWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-`
+`;
 
-export default UploadZone
+export default UploadZone;
