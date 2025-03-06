@@ -1,20 +1,40 @@
 import { Divider, Select, theme } from "antd"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import styled from "styled-components"
 import useSWR from "swr"
 
+import { useDocumentId } from "../../hooks/useDocumentId"
 import fetcher from "../../lib/fetcher"
 
-const SiderSelectSection = ({ setDocumentId }) => {
+const SiderSelectSection = ({ handleDocumentId }) => {
+  const { documentId, organizationId } = useDocumentId()
   const [isSelected, setIsSelected] = useState(false)
+  const [options, setOptions] = useState([
+    { value: 0, label: "문서를 선택해주세요", disabled: true },
+  ])
   const { data, error, mutate } = useSWR("/organizations/names", fetcher)
-  const navigate = useNavigate()
   const {
     token: { colorPrimary },
   } = theme.useToken()
 
-  useEffect(() => {}, [])
+  console.log("organizationId: ", typeof organizationId)
+
+  useEffect(() => {
+    setIsSelected(() => (documentId ? false : true))
+  }, [documentId, organizationId])
+
+  useEffect(() => {
+    if (data) {
+      setOptions((prev) => {
+        const options = data?.map((organization) => ({
+          value: organization.id,
+          label: organization.name,
+        }))
+        return [...prev, ...options]
+      })
+    }
+  }, [data])
 
   return (
     <Wrapper>
@@ -22,16 +42,14 @@ const SiderSelectSection = ({ setDocumentId }) => {
       <SelectWrapper
         showSearch
         size="large"
+        value={organizationId || options[0].value}
         $isSelected={isSelected}
         $primary={colorPrimary}
-        placeholder="문서를 선택해주세요"
         optionFilterProp="label"
-        onChange={(value) => setDocumentId(value)}
-        options={data?.map((organization) => ({
-          value: organization.id,
-          label: organization.name,
-        }))}
+        onChange={(value) => handleDocumentId(value)}
+        options={options}
       />
+      {}
     </Wrapper>
   )
 }
@@ -63,6 +81,7 @@ const SelectWrapper = styled(Select)`
   }
   & .ant-select-arrow,
   .ant-select-selection-item {
+    font-size: 14px;
     color: ${(props) =>
       props.$isSelected ? props.$primary : "#ffffff"} !important;
   }

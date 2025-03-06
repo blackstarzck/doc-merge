@@ -1,37 +1,44 @@
-import { AgGridReact } from "ag-grid-react";
-import { Button, message } from "antd";
-import { DateTime } from "luxon";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import styled from "styled-components";
+import { AgGridReact } from "ag-grid-react"
+import { Button, message } from "antd"
+import { DateTime } from "luxon"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import styled from "styled-components"
 
-import useCurrentDocumentColumns from "../../hooks/useCurrentDocumentColumns";
-import { useDocumentId } from "../../hooks/useDocumentId";
+import useCurrentDocumentColumns from "../../hooks/useCurrentDocumentColumns"
+import { useDocumentId } from "../../hooks/useDocumentId"
 import {
   deleteDocument,
   getDocument,
-  updateDocument,
-} from "../../store/document/documentSlice";
-import ActionHandler from "../ActionHandler";
+  postDocument,
+} from "../../store/document/documentSlice"
+import ActionHandler from "../ActionHandler"
 
-const numberFormatter = (value) => value.toLocaleString("en-US");
+const numberFormatter = (value) => value.toLocaleString("en-US")
 const dateFormatter = (value) => {
-  const jsDate = new Date(value);
-  const dt = DateTime.fromJSDate(jsDate);
-  return dt.toFormat("yyyy-MM-dd");
-};
+  const jsDate = new Date(value)
+  const dt = DateTime.fromJSDate(jsDate)
+  return dt.toFormat("yyyy-MM-dd")
+}
 
 const TableSection = () => {
-  const { documentId } = useDocumentId();
-  const currentDocumentColumns = useCurrentDocumentColumns();
-  const dispatch = useDispatch();
-  const gridRef = useRef();
-  const [rowData, setRowData] = useState([]);
-  const [columnDefs, setColumnDefs] = useState([]);
-  const [sequence, setSequence] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelectedRows] = useState([]);
-  const [messageApi, contextHolder] = message.useMessage();
+  const { documentId, organizationId } = useDocumentId()
+  const currentDocumentColumns = useCurrentDocumentColumns()
+  const dispatch = useDispatch()
+  const gridRef = useRef()
+  const [rowData, setRowData] = useState([])
+  const [columnDefs, setColumnDefs] = useState([])
+  const [selected, setSelectedRows] = useState([])
+  const [messageApi, contextHolder] = message.useMessage()
+  const { loading: getLoading, error: getError } = useSelector(
+    (state) => state.document.get
+  )
+  const { loading: postLoading, error: postError } = useSelector(
+    (state) => state.document.post
+  )
+  const { loading: deleteLoading, error: deleteError } = useSelector(
+    (state) => state.document.delete
+  )
 
   useEffect(() => {
     setColumnDefs(
@@ -42,155 +49,173 @@ const TableSection = () => {
           cellDataType: column.type,
           valueFormatter: (params) => {
             if (column.type === "number" && params.value) {
-              return numberFormatter(params.value);
+              return numberFormatter(params.value)
             }
             if (column.type === "date" && params.value) {
-              return dateFormatter(params.value);
+              return dateFormatter(params.value)
             }
             if (!params.value) {
-              return "";
+              return ""
             }
           },
-        };
+        }
       })
-    );
-  }, [currentDocumentColumns]);
+    )
+  }, [currentDocumentColumns])
 
   useEffect(() => {
-    setLoading(true);
     dispatch(
-      getDocument({ documentId: documentId || `/organization/${documentId}` })
+      getDocument({
+        path: documentId || "organizations",
+        documentId: organizationId || "",
+      })
     )
       .then((res) => {
-        console.log("res: ", res);
-        const data = res.payload ? structuredClone(res.payload) : [];
+        console.log("res: ", res)
+        const data = res.payload ? structuredClone(res.payload) : []
         const dateTypesColumns = currentDocumentColumns
           .filter((item) => item.type === "date")
-          .map((item) => item.key);
+          .map((item) => item.key)
 
         data.map((item) => {
           dateTypesColumns.forEach((column) => {
-            item[column] = item[column] ? new Date(item[column]) : null;
-          });
-          return item;
-        });
+            item[column] = item[column] ? new Date(item[column]) : null
+          })
+          return item
+        })
 
-        console.log("data: ", data);
-        setRowData(data);
+        console.log("data: ", data)
+        setRowData(data)
       })
       .catch((error) => console.error("Failed to load data", error))
-      .finally(() => setLoading(false));
-  }, [documentId, currentDocumentColumns, dispatch]);
+  }, [documentId, organizationId, currentDocumentColumns, dispatch])
 
   const createOneDocumentRecord = useCallback(() => {
     const record = currentDocumentColumns.reduce((acc, column) => {
-      acc[column.name] = ""; // 모든 필드를 null로 초기화
-      return acc;
-    }, {});
-    record.id = `temp-${sequence}`; // 고유 ID 설정
-    setSequence((prev) => prev + 1);
-    return record;
-  }, [currentDocumentColumns, sequence]);
+      acc[column.key] = "" // 모든 필드를 null로 초기화
+      return acc
+    }, {})
+    return record
+  }, [currentDocumentColumns])
 
   const onAddRow = () => {
-    const newRecord = createOneDocumentRecord();
-    gridRef.current.api.applyTransaction({ add: [newRecord] });
-  };
+    const newRecord = createOneDocumentRecord()
+    gridRef.current.api.applyTransaction({ add: [newRecord] })
+  }
 
   const onRemoveRows = () => {
-    const selectedNodes = gridRef.current.api.getSelectedNodes();
-    const selecteDatas = selectedNodes.map((node) => node.data);
+    const selectedNodes = gridRef.current.api.getSelectedNodes()
+    const selecteDatas = selectedNodes.map((node) => node.data)
 
     const ids = selecteDatas
       .filter((data) => typeof data.id === "number")
-      .map((data) => data.id);
+      .map((data) => data.id)
 
-    setLoading(true);
     dispatch(deleteDocument({ documentId, ids }))
       .then((res) => {
-        console.log("After delete data", res);
-        setSelectedRows([]);
-        messageApi.open({ type: "success", content: "삭제되었습니다." });
-        gridRef.current.api.applyTransaction({ remove: selecteDatas });
+        console.log("After delete data", res)
+        if (res.type.includes("rejected")) {
+          messageApi.open({
+            type: "error",
+            content: `저장을 실패하였습니다.`,
+          })
+        } else {
+          const copy = structuredClone(res.payload)
+          setSelectedRows([])
+          setRowData(copy)
+          messageApi.open({ type: "success", content: "삭제되었습니다." })
+        }
+
+        gridRef.current.api.applyTransaction({ remove: selecteDatas })
       })
-      .catch((error) =>
+      .catch((error) => {
+        console.log("delete error: ", error)
         messageApi.open({
           type: "error",
-          content: `저장을 실패하였습니다. ${error.message}`,
+          content: `저장을 실패하였습니다.`,
         })
-      )
-      .finally(() => setLoading(false));
-  };
+      })
+  }
 
   const onCellValueChanged = useCallback((event) => {
-    const { data, colDef } = event;
-    console.log("[onCellValueChanged] event: ", event);
+    const { data, colDef } = event
+    console.log("[onCellValueChanged] event: ", event)
 
-    gridRef.current.api.applyTransaction({ update: [data] });
-  }, []);
+    gridRef.current.api.applyTransaction({ update: [data] })
+  }, [])
 
   const onRowSelected = useCallback((event) => {
-    const datas = event.api.getSelectedNodes().map((node) => node.data);
-    console.log("[onRowSelected] event: ", datas);
-    setSelectedRows(datas.map((data) => data.id));
-  }, []);
+    const datas = event.api.getSelectedNodes().map((node) => node.data)
+    console.log("[onRowSelected] event: ", datas)
+    setSelectedRows(datas.map((data) => data.id))
+  }, [])
 
   const onSave = () => {
-    const rowData = [];
-    gridRef.current.api.forEachNode((node) => {
-      if (typeof node.data.id === "number") rowData.push(node.data);
-    });
+    const rowData = []
+    const editingCells = gridRef.current.api.getEditingCells()
 
-    console.log("[onSave] rowData: ", rowData);
-
-    const editingCells = gridRef.current.api.getEditingCells();
-    console.log("editingCells: ", editingCells);
     if (editingCells.length > 0) {
       editingCells.forEach((cell) => {
         const rowNode = gridRef.current.api.getDisplayedRowAtIndex(
           cell.rowIndex
-        );
-        const colId = cell.column.getColId();
+        )
+        const colId = cell.column.getColId()
         const newValue = gridRef.current.api
           .getCellEditorInstances({
             rowNodes: [rowNode],
             columns: [cell.column],
           })[0]
-          ?.getValue(); // 입력 박스 값 가져오기
+          ?.getValue() // 입력 박스 값 가져오기
 
         if (newValue !== undefined) {
-          rowNode.setDataValue(colId, newValue); // 셀 값 업데이트
+          rowNode.setDataValue(colId, newValue) // 셀 값 업데이트
         }
-      });
-      gridRef.current.api.stopEditing(); // 모든 편집 종료
+      })
+      gridRef.current.api.stopEditing() // 모든 편집 종료
     }
-    setLoading(true);
-    dispatch(updateDocument({ documentId, document: rowData }))
+
+    gridRef.current.api.forEachNode((node) => {
+      let cnt = 0
+      for (const key in node.data) {
+        if (!node.data[key]) cnt++
+      }
+      // -1은 id를 제외한 필드의 개수
+      if (cnt <= Object.keys(node.data).length - 1) rowData.push(node.data)
+    })
+
+    dispatch(postDocument({ documentId, document: rowData }))
       .then((res) => {
-        gridRef.current.api.deselectAll();
-        messageApi.open({ type: "success", content: "저장되었습니다." });
+        if (res.type.includes("rejected")) {
+          messageApi.open({
+            type: "error",
+            content: `저장을 실패하였습니다. 콘솔로그를 확인해주세요.`,
+          })
+        } else {
+          const copy = structuredClone(res.payload)
+          setRowData(copy)
+          console.log("after success : ", res)
+          gridRef.current.api.deselectAll()
+          messageApi.open({ type: "success", content: "저장되었습니다." })
+        }
       })
       .catch((error) => {
-        console.log("error: ", error);
+        console.log("post error: ", error)
         messageApi.open({
           type: "error",
-          content: `저장을 실패하였습니다. ${error.message}`,
-        });
+          content: `저장을 실패하였습니다. 콘솔로그를 확인해주세요.`,
+        })
       })
-      .finally(() => {
-        setLoading(false);
-        setSelectedRows([]);
-      });
-  };
+      .finally(() => setSelectedRows([]))
+  }
 
   const getRowId = useCallback((params) => {
-    return String(params.data.id);
-  }, []);
+    return String(params.data.id)
+  }, [])
 
   return (
     <Wrapper>
       <AgGridReact
-        loading={loading}
+        loading={getLoading || postLoading || deleteLoading}
         getRowId={getRowId}
         ref={gridRef}
         rowData={rowData}
@@ -224,10 +249,10 @@ const TableSection = () => {
         onSave={onSave}
       />
     </Wrapper>
-  );
-};
+  )
+}
 
-export default TableSection;
+export default TableSection
 
 const Wrapper = styled.div`
   flex: 1;
@@ -235,8 +260,8 @@ const Wrapper = styled.div`
   gap: 18px;
   flex-direction: column;
   height: 100%;
-`;
+`
 
 const ButtonWrapper = styled(Button)`
   width: 100%;
-`;
+`

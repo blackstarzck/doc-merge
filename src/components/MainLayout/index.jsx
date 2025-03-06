@@ -1,36 +1,32 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import { Button, Layout, Menu, theme } from "antd";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons"
+import { Button, Layout, Menu, theme } from "antd"
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 
-import { OVERVIEW_TABLES } from "../../constants/menu";
-import Logo from "../Logo";
-import SiderSelectSection from "../SiderSelectSection";
-import UploadZone from "../UploadZone";
+import { OVERVIEW_TABLES } from "../../constants/menu"
+import { useDocumentId } from "../../hooks/useDocumentId"
+import Logo from "../Logo"
+import SiderSelectSection from "../SiderSelectSection"
+import UploadZone from "../UploadZone"
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content } = Layout
 
 const MainLayout = ({ children }) => {
-  const [documentId, setDocumentId] = useState(null);
-  const [collapsed, setCollapsed] = useState(false);
-  const navigate = useNavigate();
+  const { documentId, organizationId } = useDocumentId()
+  const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
   const {
     token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-
-  const params = useParams();
-
-  useEffect(() => {
-    if (documentId) navigate(`/${documentId}`);
-    console.log("MainLayout useEffect: ", documentId);
-  }, [documentId]);
+  } = theme.useToken()
 
   const handleDocumentId = (key) => {
-    const match = OVERVIEW_TABLES.find((table) => table.key === key);
-    setDocumentId(() => {
-      return match ? match.key : `organization/${key}`;
-    });
-  };
+    const match = OVERVIEW_TABLES.find((table) => table.key === key)
+    const path = match ? match.key : `organization/${key}`
+
+    console.log("path: ", path)
+
+    navigate(`/${path}`)
+  }
 
   return (
     <Layout style={{ height: "100vh" }}>
@@ -39,14 +35,15 @@ const MainLayout = ({ children }) => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[params.documentId]}
-          items={OVERVIEW_TABLES.filter((table) => !table.hide).map(
-            (table) => ({ label: table.label, key: table.key })
-          )} // Add items prop
+          selectedKeys={[documentId]}
+          items={OVERVIEW_TABLES.map((table) => ({
+            label: table.label,
+            key: table.key,
+          }))}
           onSelect={({ key }) => handleDocumentId(key)}
           style={{ paddingTop: 46 }}
         />
-        <SiderSelectSection setDocumentId={handleDocumentId} />
+        <SiderSelectSection handleDocumentId={handleDocumentId} />
         <UploadZone />
       </Sider>
       <Layout>
@@ -83,7 +80,7 @@ const MainLayout = ({ children }) => {
         </Content>
       </Layout>
     </Layout>
-  );
-};
+  )
+}
 
-export default MainLayout;
+export default MainLayout
