@@ -182,12 +182,24 @@ export const OVERVIEW_TABLES = [
       { name: "비고", key: "remarks", type: "string" },
     ],
   },
-]
+];
 
 export const ORGANIZATION_COLUMNS = [
-  { name: "입력타이틀", key: "sheet_name", type: "string" },
+  {
+    name: "입력타이틀",
+    key: "sheet_name",
+    type: "string",
+    editable: false,
+    suppressNavigable: true,
+  },
+  {
+    name: "타이틀별번호",
+    key: "sheet_data_num",
+    type: "number",
+    editable: false,
+    suppressNavigable: true,
+  },
   { name: "번호", key: "row_num", type: "number" },
-  { name: "타이틀별번호", key: "sheet_data_num", type: "number" },
   { name: "기관명", key: "org_name", type: "string" },
   { name: "마감", key: "b_close_date", type: "boolean" },
   { name: "계산서", key: "b_invoice", type: "boolean" },
@@ -202,36 +214,129 @@ export const ORGANIZATION_COLUMNS = [
   { name: "총권수", key: "total_bks", type: "number" },
   { name: "마크장비", key: "mark_equip", type: "string" },
   { name: "도서정가", key: "bk_price", type: "number" },
-  { name: "낙찰금액", key: "win_price", type: "number" },
+  {
+    name: "낙찰금액",
+    key: "win_price",
+    type: "number",
+    calc: {
+      text: "도서정가 * 낙찰율(%)",
+      equation: "floor(bk_price * win_rate)",
+    },
+  },
   { name: "낙찰율(%)", key: "win_rate", type: "number" },
-  { name: "도서공급단가", key: "bk_supply_price", type: "number" },
+  {
+    name: "도서공급단가",
+    key: "bk_supply_price",
+    type: "number",
+    calc: {
+      text: "도서정가 * 도서공급율",
+      equation: "floor(bk_price * bk_supply_rate)",
+    },
+  },
   { name: "도서공급율", key: "bk_supply_rate", type: "number" },
-  { name: "매입원가", key: "purchase_cost", type: "number" },
+  {
+    name: "매입원가",
+    key: "purchase_cost",
+    type: "number",
+    calc: {
+      text: "도서정가 * 도서원가율",
+      equation: "bk_price * bk_cost_late",
+    },
+  },
   { name: "도서원가율", key: "bk_cost_late", type: "number" },
   { name: "기관마,장단가(권당)", key: "org_m_per_price", type: "number" },
-  { name: "기관마,장비정가", key: "org_m_price", type: "number" },
-  { name: "마장공급단가", key: "m_supply_price", type: "number" },
-  { name: "마장공급합가", key: "m_supply_total_price", type: "number" },
   {
-    name: "품절정가(간접할인등)",
-    key: "out_of_stock_price",
+    name: "기관마,장비정가",
+    key: "org_m_price",
     type: "number",
+    calc: {
+      text: "총권수 * 기관마,장단가(권당)",
+      equation: "total_bks * org_m_per_price",
+    },
   },
+  {
+    name: "마장공급단가",
+    key: "m_supply_price",
+    type: "number",
+    calc: {
+      text: "총권수 * 마장공급단가",
+      equation: "total_bks * m_supply_price",
+    },
+  },
+  { name: "마장공급합가", key: "m_supply_total_price", type: "number" },
+  { name: "품절정가(간접할인등)", key: "out_of_stock_price", type: "number" },
   { name: "품절권수", key: "out_of_stock_bks", type: "number" },
-  { name: "최종납품권수", key: "final_delivery_quantity", type: "number" },
-  { name: "마장최종매출액", key: "m_final_sales", type: "number" },
+  {
+    name: "최종납품권수",
+    key: "final_delivery_quantity",
+    type: "number",
+    calc: {
+      text: "총권수 - 품절권수",
+      equation: "total_bks - out_of_stock_bks",
+    },
+  },
+  {
+    name: "마장최종매출액",
+    key: "m_final_sales",
+    type: "number",
+    calc: {
+      text: "마장공급단가 * 마장공급단가",
+      equation: "m_supply_price * m_supply_price",
+    },
+  },
   { name: "결제방식", key: "payment_method", type: "string" },
   { name: "선입금", key: "payment", type: "number" },
   { name: "선입금일자", key: "pre_payment_date", type: "date" },
   { name: "잔금", key: "balance", type: "number" },
   { name: "잔금일자", key: "balance_date", type: "date" },
-  { name: "예정잔금", key: "expected_balance", type: "number" },
+  {
+    name: "예정잔금",
+    key: "expected_balance",
+    type: "number",
+    calc: {
+      text: "도서공급단가 + 마장공급합가 - 선입금 - 잔금",
+      equation:
+        "floor(bk_supply_price + m_supply_total_price - pre_payment - balance)",
+    },
+  },
   { name: "총입금액", key: "total_payment", type: "number" },
-  { name: "최종납품정가", key: "final_delivery_price", type: "number" },
-  { name: "최종도서매출액", key: "final_bk_sales", type: "number" },
-  { name: "도서수익금", key: "bk_revenue", type: "number" },
-  { name: "남은기간", key: "d_day", type: "number" },
+  {
+    name: "최종납품정가",
+    key: "final_delivery_price",
+    type: "number",
+    calc: {
+      text: "도서정가 - 품절권수",
+      equation: "bk_price - out_of_stock_bks",
+    },
+  },
+  {
+    name: "최종도서매출액",
+    key: "final_bk_sales",
+    type: "number",
+    calc: {
+      text: "도서공급율 * 마장공급단가",
+      equation: "bk_supply_rate * m_supply_price",
+    },
+  },
+  {
+    name: "도서수익금",
+    key: "bk_revenue",
+    type: "number",
+    calc: {
+      text: "최종도서매출액 - (마장공급단가 * 도서원가율)",
+      equation: "final_bk_sales - (m_supply_price * bk_cost_late)",
+    },
+  },
+  {
+    name: "남은기간",
+    key: "d_day",
+    type: "number",
+    calc: {
+      text: "납품일 - 이익율",
+      equation: "d-day(delivery_date - revenue_rate)",
+    },
+  },
   { name: "오늘날짜", key: "today_date", type: "date" },
   { name: "순이익금", key: "net_revenue", type: "number" },
   { name: "이익율", key: "revenue_rate", type: "number" },
-]
+];

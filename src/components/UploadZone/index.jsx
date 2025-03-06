@@ -1,20 +1,20 @@
-import { UploadOutlined } from "@ant-design/icons"
-import { message, Upload } from "antd"
-import axios from "axios"
-import { useDispatch, useSelector } from "react-redux"
-import styled from "styled-components"
+import { UploadOutlined } from "@ant-design/icons";
+import { message, Upload } from "antd";
+import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
 
-import { API_BASE_URL } from "../../constants/config"
-import { useDocumentId } from "../../hooks/useDocumentId"
-import { getDocument } from "../../store/document/documentSlice"
+import { API_BASE_URL } from "../../constants/config";
+import { useDocumentId } from "../../hooks/useDocumentId";
+import { getDocument } from "../../store/document/documentSlice";
 
-const { Dragger } = Upload
+const { Dragger } = Upload;
 
 const UploadZone = () => {
-  const { documentId, organizationId } = useDocumentId()
-  const [messageApi, contextHolder] = message.useMessage()
-  const { loading, error } = useSelector((state) => state.document.post)
-  const dispatch = useDispatch()
+  const { documentId, organizationId } = useDocumentId();
+  const [messageApi, contextHolder] = message.useMessage();
+  const { loading, error } = useSelector((state) => state.document.post);
+  const dispatch = useDispatch();
   const props = {
     name: "file",
     multiple: false,
@@ -26,46 +26,46 @@ const UploadZone = () => {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         file.type === "application/vnd.ms-excel" ||
         file.name.endsWith(".xlsx") ||
-        file.name.endsWith(".xls")
+        file.name.endsWith(".xls");
 
       if (!isExcel) {
         messageApi.open({
           type: "error",
           content: "엑셀 파일만 업로드할 수 있습니다.",
-        })
-        return false
+        });
+        return false;
       }
 
-      return true
+      return true;
     },
     customRequest: async ({ file, onSuccess, onError }) => {
-      const formData = new FormData()
-      formData.append("file", file)
-
+      const formData = new FormData();
+      formData.append("file", file);
+      // TODO: 기존 데이터 + 엑셀 데이터 합치기
       try {
         const response = await axios.post(
           `${API_BASE_URL}/upload/${documentId || organizationId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
-        )
+        );
 
-        messageApi.open({ type: "success", content: "파일 업로드 성공!" })
-        onSuccess(response.data)
+        messageApi.open({ type: "success", content: "파일 업로드 성공!" });
+        onSuccess(response.data);
 
         dispatch(
           getDocument({
             path: documentId || "organizations",
             documentId: organizationId || "",
           })
-        )
+        );
       } catch (error) {
-        console.log("error: ", error)
-        messageApi.open({ type: "error", content: "파일 업로드 실패." })
-        onError(error)
+        console.log("error: ", error);
+        messageApi.open({ type: "error", content: "파일 업로드 실패." });
+        onError(error);
       }
     },
     onDrop(e) {},
-  }
+  };
 
   return (
     <Wrapper>
@@ -77,8 +77,8 @@ const UploadZone = () => {
         </InnerWrapper>
       </Dragger>
     </Wrapper>
-  )
-}
+  );
+};
 
 const Wrapper = styled.div`
   position: absolute;
@@ -87,13 +87,13 @@ const Wrapper = styled.div`
   right: 0;
   margin: auto;
   padding: 10px;
-`
+`;
 
 const InnerWrapper = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-`
+`;
 
-export default UploadZone
+export default UploadZone;

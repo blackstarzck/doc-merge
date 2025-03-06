@@ -1,40 +1,38 @@
-import { Divider, Select, theme } from "antd"
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import styled from "styled-components"
-import useSWR from "swr"
+import { Divider, Select, theme } from "antd";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
 
-import { useDocumentId } from "../../hooks/useDocumentId"
-import fetcher from "../../lib/fetcher"
+import { useDocumentId } from "../../hooks/useDocumentId";
+import {
+  getOrgNames,
+  selectAllNames,
+} from "../../store/organizationNames/organizationNamesSlice";
+
+const defaultVal = 0;
 
 const SiderSelectSection = ({ handleDocumentId }) => {
-  const { documentId, organizationId } = useDocumentId()
-  const [isSelected, setIsSelected] = useState(false)
-  const [options, setOptions] = useState([
-    { value: 0, label: "문서를 선택해주세요", disabled: true },
-  ])
-  const { data, error, mutate } = useSWR("/organizations/names", fetcher)
+  const { documentId, organizationId } = useDocumentId();
+  const [isSelected, setIsSelected] = useState(false);
+  const names = useSelector(selectAllNames);
+  const dispatch = useDispatch();
   const {
     token: { colorPrimary },
-  } = theme.useToken()
+  } = theme.useToken();
 
-  console.log("organizationId: ", typeof organizationId)
-
-  useEffect(() => {
-    setIsSelected(() => (documentId ? false : true))
-  }, [documentId, organizationId])
+  console.log("organizationId: ", typeof organizationId);
 
   useEffect(() => {
-    if (data) {
-      setOptions((prev) => {
-        const options = data?.map((organization) => ({
-          value: organization.id,
-          label: organization.name,
-        }))
-        return [...prev, ...options]
-      })
-    }
-  }, [data])
+    dispatch(getOrgNames());
+  }, []);
+
+  useEffect(() => {
+    setIsSelected(() => (documentId ? false : true));
+  }, [documentId, organizationId]);
+
+  useEffect(() => {
+    console.log("names: ", names);
+  }, [names]);
 
   return (
     <Wrapper>
@@ -42,22 +40,28 @@ const SiderSelectSection = ({ handleDocumentId }) => {
       <SelectWrapper
         showSearch
         size="large"
-        value={organizationId || options[0].value}
+        value={organizationId || defaultVal}
         $isSelected={isSelected}
         $primary={colorPrimary}
         optionFilterProp="label"
         onChange={(value) => handleDocumentId(value)}
-        options={options}
+        options={[
+          { value: defaultVal, label: "문서를 선택해주세요", disabled: true },
+          ...names.map((organization) => ({
+            value: organization.id,
+            label: organization.name,
+          })),
+        ]}
       />
       {}
     </Wrapper>
-  )
-}
+  );
+};
 
 const Wrapper = styled.div`
   width: 100%;
   padding: 0 4px;
-`
+`;
 
 const SelectWrapper = styled(Select)`
   width: 100%;
@@ -85,6 +89,6 @@ const SelectWrapper = styled(Select)`
     color: ${(props) =>
       props.$isSelected ? props.$primary : "#ffffff"} !important;
   }
-`
+`;
 
-export default SiderSelectSection
+export default SiderSelectSection;
