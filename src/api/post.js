@@ -1,8 +1,6 @@
-import axios from "axios";
+import axios from "axios"
 
-import { API_BASE_URL } from "../constants/config";
-
-axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL
 
 // 팩토리 함수
 const createPostApi = (endpoint) => {
@@ -11,11 +9,11 @@ const createPostApi = (endpoint) => {
       .post(`/${endpoint}`, { document })
       .then((res) => res.data)
       .catch((error) => {
-        console.log("error log: ", error);
-        throw new Error("POST-ERROR. 콘솔로그를 확인해주세요.");
-      });
-  };
-};
+        console.log("error log: ", error)
+        throw new Error("POST-ERROR. 콘솔로그를 확인해주세요.")
+      })
+  }
+}
 
 export const postApi = {
   book_delivery: createPostApi("book_delivery"),
@@ -24,4 +22,4 @@ export const postApi = {
   logistics_job: createPostApi("logistics_job"),
   cargo_usage: createPostApi("cargo_usage"),
   organizations: createPostApi("organizations"),
-};
+}

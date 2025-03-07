@@ -30,7 +30,13 @@ const MainLayout = ({ children }) => {
 
   return (
     <Layout style={{ height: "100vh" }}>
-      <Sider width={250} trigger={null} collapsible collapsed={collapsed}>
+      <Sider
+        theme="dark"
+        width={250}
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+      >
         <Logo />
         <Menu
           theme="dark"

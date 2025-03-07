@@ -182,12 +182,13 @@ export const OVERVIEW_TABLES = [
       { name: "비고", key: "remarks", type: "string" },
     ],
   },
-];
+]
 
 export const ORGANIZATION_COLUMNS = [
   {
     name: "입력타이틀",
     key: "sheet_name",
+    hide: true,
     type: "string",
     editable: false,
     suppressNavigable: true,
@@ -195,6 +196,7 @@ export const ORGANIZATION_COLUMNS = [
   {
     name: "타이틀별번호",
     key: "sheet_data_num",
+    hide: true,
     type: "number",
     editable: false,
     suppressNavigable: true,
@@ -339,4 +341,4 @@ export const ORGANIZATION_COLUMNS = [
   { name: "오늘날짜", key: "today_date", type: "date" },
   { name: "순이익금", key: "net_revenue", type: "number" },
   { name: "이익율", key: "revenue_rate", type: "number" },
-];
+]
