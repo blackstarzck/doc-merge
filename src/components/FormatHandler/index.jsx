@@ -12,28 +12,33 @@ let index = 0;
 
 const FormatHandler = () => {
   const [form] = Form.useForm();
-  const [items, setItems] = useState(DEFAULT_FORMAT_ITEMS);
-  const [name, setName] = useState("");
+  const [formatItems, setFormatItems] = useState(DEFAULT_FORMAT_ITEMS);
   const inputRef = useRef(null);
+  const [isDisabled, setIsDisabled] = useState(true);
   const dispatch = useDispatch();
 
   const onNameChange = (event) => {
-    console.log("onNameChange: ", event.target.value);
-
-    setName(event.target.value);
-
-    console.log("field value: ", form.getFieldValue("confirm"));
+    setIsDisabled((prev) => !form.getFieldValue("customFormatName"));
   };
   const addItem = (e) => {
     e.preventDefault();
+
+    console.log("addItem: ", inputRef);
 
     // Submit form to trigger validation
     form
       .validateFields()
       .then(() => {
-        setItems([...items, { key: `custom-${index++}`, label: name }]);
-        setName("");
-        form.setFieldValue("confirm", "");
+        setFormatItems([
+          ...formatItems,
+          {
+            key: `custom-${index++}`,
+            label: form.getFieldValue("customFormatName"),
+          },
+        ]);
+
+        form.setFieldValue("customFormatName", "");
+
         setTimeout(() => {
           inputRef.current?.focus();
         }, 0);
@@ -44,7 +49,7 @@ const FormatHandler = () => {
   };
 
   const onClickDeleteFormat = (key) => {
-    setItems((prev) => prev.filter((item) => item.key !== key));
+    setFormatItems((prev) => prev.filter((item) => item.key !== key));
   };
 
   const openFormatter = () => {
@@ -58,9 +63,8 @@ const FormatHandler = () => {
   };
 
   const validateSameName = (_, value) => {
-    const filter = items.filter((item) => item.label === value);
+    const filter = formatItems.filter((item) => item.label === value);
     const isSameName = filter.length > 0;
-    console.log("validateSameName value: ", value, name, isSameName);
 
     if (isSameName) {
       return Promise.reject(new Error("존재하는 서식이름입니다"));
@@ -76,13 +80,11 @@ const FormatHandler = () => {
           onSelect={(data) => {
             if (data.includes("custom")) openFormatter();
           }}
-          onDropdownVisibleChange={(open) => {
-            console.log("여기", open);
-            setName("");
-            form.setFieldValue("confirm", "");
+          onDropdownVisibleChange={() => {
+            form.setFieldValue("customFormatName", "");
           }}
           optionLabelProp="key"
-          options={items.map((item) => ({
+          options={formatItems.map((item) => ({
             label: (
               <OptionWrapper>
                 <div>
@@ -111,18 +113,18 @@ const FormatHandler = () => {
           placeholder="서식을 선택해주세요"
           dropdownRender={(menu) => {
             return (
+              // customized dropdown
               <>
                 {menu}
                 <Divider style={{ margin: "8px 0" }} />
                 <Space style={{ padding: "0 8px 4px" }}>
                   <FormWrapper form={form} onFinish={onFinish}>
                     <Form.Item
-                      name="confirm"
+                      name="customFormatName"
                       rules={[{ validator: validateSameName }]}
                     >
                       <Input
                         ref={inputRef}
-                        value={name}
                         allowClear
                         autoSave="off"
                         onChange={onNameChange}
@@ -132,7 +134,7 @@ const FormatHandler = () => {
                     <Form.Item>
                       <Button
                         htmlType="submit"
-                        disabled={!name}
+                        disabled={isDisabled}
                         type="text"
                         icon={<PlusOutlined />}
                         onClick={addItem}

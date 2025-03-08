@@ -83,7 +83,8 @@ const FormatModal = () => {
           xl: "60%", // 1200
           xxl: "70%", // 1600
         }}
-        open={isVisible}
+        // open={isVisible}
+        open={true}
         footer={null}
         onCancel={handleCancel}
         modalRender={(modal) => (

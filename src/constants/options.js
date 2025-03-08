@@ -1,33 +1,112 @@
 export const TABLE_ELEMENTS = [
-  { key: "all", styles: null, isSelected: false, label: "전체 표" },
   {
-    key: "fst-columns-repeat",
-    styles: null,
+    key: "all",
+    label: "전체 표",
     isSelected: false,
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
+  },
+  {
+    key: "first_columns_repeat", // 0 % 2 나머지값 0 에 적용
     label: "열 줄무늬",
+    isSelected: false,
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
   },
   {
-    key: "scnd-columns-repeat",
-    styles: null,
-    isSelected: false,
+    key: "second_columns_repeat", // 0 % 2 나머지값 1 에 적용
     label: "둘째 열 줄무늬",
+    isSelected: false,
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
   },
   {
-    key: "fst-rows-repeat",
-    styles: null,
-    isSelected: false,
+    key: "first_rows_repeat", // 0 % 2 나머지값 0 에 적용
     label: "첫 행 줄무늬",
+    isSelected: false,
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
   },
   {
-    key: "scnd-rows-repeat",
-    styles: null,
-    isSelected: false,
+    key: "second_rows_repeat", // 0 % 2 나머지값 1 에 적용
     label: "둘째 행 줄무늬",
+    isSelected: false,
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
   },
-  { key: "lst-column", styles: null, isSelected: false, label: "마지막 열" },
-  { key: "fst-column", styles: null, isSelected: false, label: "첫째 열" },
-  { key: "fst-row", styles: null, isSelected: false, label: "머리글 행" },
-  { key: "lst-row", styles: null, isSelected: false, label: "요약 행" },
+  {
+    key: "last_column",
+    isSelected: false,
+    label: "마지막 열",
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
+  },
+  {
+    key: "first_column",
+    isSelected: false,
+    label: "첫째 열",
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
+  },
+  {
+    key: "header_row",
+    isSelected: false,
+    label: "머리글 행",
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
+  },
+  {
+    key: "footer_row",
+    isSelected: false,
+    label: "요약 행",
+    styles: {
+      fontStyle: null,
+      fontSize: null,
+      uderline: null,
+      color: null,
+      backgroundColor: null,
+    },
+  },
 ];
 
 export const FONT_STYLE_OPTIONS = [
@@ -73,17 +152,45 @@ export const UNDERLINE_OPTIONS = [
 export const DEFAULT_FORMAT_ITEMS = [
   {
     key: "Type-A",
-    label: "Type-A",
-    styles: null,
+    label: "typeA",
+    elements: {
+      all: null,
+      first_columns_repeat: null,
+      second_columns_repeat: null,
+      first_rows_repeat: {
+        style: {
+          fontStyle: "normal",
+          fontWeight: "normal",
+          fontSize: 11,
+          textDecorationLine: "none",
+          color: "#000000",
+          backgroundColor: "#EDEDED",
+        },
+      },
+      second_rows_repeat: null,
+      last_column: null,
+      first_column: null,
+      header_row: {
+        style: {
+          fontStyle: "normal",
+          fontWeight: "bold",
+          fontSize: 11,
+          textDecorationLine: "none",
+          color: "#000000",
+          backgroundColor: "#C3C3C3",
+        },
+      },
+      footer_row: null,
+    },
   },
   {
     key: "Type-B",
-    label: "Type-B",
-    styles: null,
+    label: "typeB",
+    elements: [],
   },
   {
     key: "Type-C",
-    label: "Type-C",
-    styles: null,
+    label: "typeC",
+    elements: [],
   },
 ];

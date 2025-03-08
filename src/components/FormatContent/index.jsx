@@ -62,7 +62,7 @@ const defaultStyles = {
   backgroundColor: "#ffffff",
 };
 
-const FormatContent = ({ handleCancel, saveCustomFormat }) => {
+const FormatContent = ({ handleCancel, saveNewFormat }) => {
   const [form] = Form.useForm();
   const [styles, setStyles] = useState(defaultStyles);
   const [menuItems, setMenuItems] = useState(TABLE_ELEMENTS);
@@ -176,7 +176,8 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
           <Head>
             <h4>미리 보기</h4>
           </Head>
-          <Preview settings={menuItems} type="grid" />
+          {/* [1] 미리보기 */}
+          <Preview type="grid" settings={menuItems} />
         </ColWrapper>
       </Row>
       <Divider />
@@ -242,11 +243,11 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
                 color="default"
                 variant="text"
                 onClick={() => {
-                  setMenuItems((prev) => {
-                    return prev.map((item) =>
+                  setMenuItems((prev) =>
+                    prev.map((item) =>
                       item.isSelected ? { ...item, styles } : { ...item }
-                    );
-                  });
+                    )
+                  );
                 }}
               >
                 저장
@@ -263,6 +264,7 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
               </Button>
             </div>
           </Head>
+          {/* [2] 미리보기 */}
           <Preview type="text" styles={styles} />
         </ColWrapper>
         {/* 아래쪽 */}
@@ -272,7 +274,7 @@ const FormatContent = ({ handleCancel, saveCustomFormat }) => {
           disabled={isSaveDisabled || Object.keys(gridStyles).length === 0}
           onClick={() => {
             const hasStyles = Object.keys(gridStyles).length > 0;
-            if (hasStyles) saveCustomFormat(gridStyles);
+            if (hasStyles) saveNewFormat(gridStyles);
             reset();
             handleCancel();
           }}

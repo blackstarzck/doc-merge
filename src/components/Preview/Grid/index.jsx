@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 const ROW_COUNT = 6;
 const COL_COUNT = 7;
+const rows = Array.from({ length: ROW_COUNT * COL_COUNT });
 
 const Grid = ({ settings, styles }) => {
   // console.log("Settings", settings);
@@ -10,7 +11,7 @@ const Grid = ({ settings, styles }) => {
   return (
     <Wrapper>
       <Row gutter={[4, 4]}>
-        {Array.from({ length: ROW_COUNT * COL_COUNT }, (_, colIndex) => (
+        {rows.map((_, colIndex) => (
           <Col key={colIndex} span={4}>
             <Box>text-{colIndex}</Box>
           </Col>
@@ -25,8 +26,11 @@ const Wrapper = styled.div`
 `;
 
 const Box = styled.div`
-  font-size: 12px;
-  background-color: rgba(0, 0, 0, 0.03);
+  font-size: 10px;
+  padding: 6px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export default Grid;
