@@ -70,7 +70,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
   const [isSaveDisabled, setSaveDisabled] = useState(false);
   const [gridStyles, setGridStyles] = useState({});
   const [selectedKeys, setSelectedKeys] = useState(); // 리스트 모두 styles 가 없을때 비활성화
-  const visibility = useSelector((state) => state.modals?.formatter.visible);
+  const isVisible = useSelector((state) => state.modals?.formatter.visible);
 
   const {
     token: { colorBorder },
@@ -100,19 +100,19 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
     );
   };
 
-  const reset = useCallback(() => {
+  const initReset = useCallback(() => {
     setStyles(defaultStyles);
     setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
     form.resetFields();
   }, [form]);
 
   useEffect(() => {
-    if (!visibility) {
-      reset();
+    if (!isVisible) {
+      initReset();
       handleCancel();
       handleDeselect();
     }
-  }, [handleCancel, reset, visibility]);
+  }, [handleCancel, initReset, isVisible]);
 
   useEffect(() => {
     const selectedItem = menuItems.find((item) => item.isSelected);
@@ -275,7 +275,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
           onClick={() => {
             const hasStyles = Object.keys(gridStyles).length > 0;
             if (hasStyles) saveNewFormat(gridStyles);
-            reset();
+            initReset();
             handleCancel();
           }}
           type="primary"

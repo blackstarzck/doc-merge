@@ -9,10 +9,38 @@ import { setVisibleState } from "../../store/modals/modalsSlice";
 import FormatModal from "../FormatModal";
 
 let index = 0;
+const LOCAL_STORAGE_KEY = "formatItems";
+
+const setUniqueNumber = (array) => {
+  // "custom-"으로 시작하는 항목 필터링 및 숫자 추출
+  const customNumbers = array
+    .map((item) => item.key.match(/^custom-(\d+)$/)) // "custom-" 다음 숫자 찾기
+    .filter(Boolean) // null 값 제거
+    .map((match) => Number(match[1])); // 숫자로 변환
+
+  let newNumber;
+
+  if (customNumbers.length === 0) {
+    // "custom-" 항목이 없으면 첫 번째 항목으로 "custom-1" 추가
+    newNumber = 1;
+  } else {
+    // 1부터 최대 숫자 사이에서 비어있는 숫자 찾기
+    for (let i = 1; i <= Math.max(...customNumbers) + 1; i++) {
+      if (!customNumbers.includes(i)) {
+        newNumber = i;
+        break;
+      }
+    }
+  }
+  return newNumber;
+};
 
 const FormatHandler = () => {
   const [form] = Form.useForm();
-  const [formatItems, setFormatItems] = useState(DEFAULT_FORMAT_ITEMS);
+  const [formatItems, setFormatItems] = useState(() => {
+    const items = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return items ? JSON.parse(items) : DEFAULT_FORMAT_ITEMS;
+  });
   const inputRef = useRef(null);
   const [isDisabled, setIsDisabled] = useState(true);
   const dispatch = useDispatch();
@@ -20,8 +48,9 @@ const FormatHandler = () => {
   const onNameChange = (event) => {
     setIsDisabled((prev) => !form.getFieldValue("customFormatName"));
   };
+
   const addItem = (e) => {
-    e.preventDefault();
+    // e.preventDefault();
 
     console.log("addItem: ", inputRef);
 
@@ -29,13 +58,19 @@ const FormatHandler = () => {
     form
       .validateFields()
       .then(() => {
-        setFormatItems([
-          ...formatItems,
-          {
-            key: `custom-${index++}`,
-            label: form.getFieldValue("customFormatName"),
-          },
-        ]);
+        setFormatItems((prev) => {
+          const newNumber = setUniqueNumber(prev);
+          const newItems = [
+            ...prev,
+            {
+              key: `custom-${newNumber}`,
+              label: form.getFieldValue("customFormatName"),
+              elements: null,
+            },
+          ];
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newItems));
+          return newItems;
+        });
 
         form.setFieldValue("customFormatName", "");
 
@@ -49,17 +84,17 @@ const FormatHandler = () => {
   };
 
   const onClickDeleteFormat = (key) => {
-    setFormatItems((prev) => prev.filter((item) => item.key !== key));
+    setFormatItems((prev) => {
+      const newItems = prev.filter((item) => item.key !== key);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newItems));
+      return newItems;
+    });
   };
 
   const openFormatter = () => {
     setTimeout(() => {
       dispatch(setVisibleState({ modalName: "formatter", visible: true }));
     }, 200);
-  };
-
-  const onFinish = (values) => {
-    console.log("폼 제출됨:", values);
   };
 
   const validateSameName = (_, value) => {
@@ -118,7 +153,11 @@ const FormatHandler = () => {
                 {menu}
                 <Divider style={{ margin: "8px 0" }} />
                 <Space style={{ padding: "0 8px 4px" }}>
-                  <FormWrapper form={form} onFinish={onFinish}>
+                  <FormWrapper
+                    form={form}
+                    onFinish={addItem}
+                    autoComplete="off"
+                  >
                     <Form.Item
                       name="customFormatName"
                       rules={[{ validator: validateSameName }]}
@@ -133,11 +172,11 @@ const FormatHandler = () => {
                     </Form.Item>
                     <Form.Item>
                       <Button
+                        label={null}
                         htmlType="submit"
                         disabled={isDisabled}
                         type="text"
                         icon={<PlusOutlined />}
-                        onClick={addItem}
                       >
                         Add item
                       </Button>

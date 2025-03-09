@@ -2,6 +2,7 @@ import { Modal } from "antd";
 import { useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
 
 import { setVisibleState } from "../../store/modals/modalsSlice";
 import FormatContent from "../FormatContent";
@@ -55,7 +56,7 @@ const FormatModal = () => {
 
   return (
     <>
-      <Modal
+      <ModalWrapper
         title={
           <div
             style={{ width: "100%", cursor: "move" }}
@@ -83,8 +84,8 @@ const FormatModal = () => {
           xl: "60%", // 1200
           xxl: "70%", // 1600
         }}
-        // open={isVisible}
-        open={true}
+        open={isVisible}
+        // open={true}
         footer={null}
         onCancel={handleCancel}
         modalRender={(modal) => (
@@ -102,9 +103,15 @@ const FormatModal = () => {
           handleCancel={handleCancel}
           saveNewFormat={saveNewFormat}
         />
-      </Modal>
+      </ModalWrapper>
     </>
   );
 };
+
+const ModalWrapper = styled(Modal)`
+  & * {
+    user-select: none;
+  }
+`;
 
 export default FormatModal;
