@@ -88,18 +88,18 @@ export const UNDERLINE_OPTIONS = [
 
 export const DEFAULT_FORMAT_ITEMS = [
   {
-    label: "Type-A",
-    key: "typeA",
+    key: "Type-A",
+    label: "typeA",
     elements: {
       all: null,
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+        style: {
+          fontStyle: "normal",
+          fontWeight: "normal",
+          fontSize: 11,
+          textDecorationLine: "none",
           color: "#000000",
           backgroundColor: "#EDEDED",
         },
@@ -108,11 +108,11 @@ export const DEFAULT_FORMAT_ITEMS = [
       last_column: null,
       first_column: null,
       header_row: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+        style: {
+          fontStyle: "normal",
+          fontWeight: "bold",
+          fontSize: 11,
+          textDecorationLine: "none",
           color: "#000000",
           backgroundColor: "#C3C3C3",
         },
@@ -121,69 +121,13 @@ export const DEFAULT_FORMAT_ITEMS = [
     },
   },
   {
-    label: "Type-B",
-    key: "typeB",
-    elements: {
-      all: null,
-      first_columns_repeat: null,
-      second_columns_repeat: null,
-      first_rows_repeat: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#EDEDED",
-        },
-      },
-      second_rows_repeat: null,
-      last_column: null,
-      first_column: null,
-      header_row: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#C3C3C3",
-        },
-      },
-      footer_row: null,
-    },
+    key: "Type-B",
+    label: "typeB",
+    elements: [],
   },
   {
-    label: "Type-C",
-    key: "typeC",
-    elements: {
-      all: null,
-      first_columns_repeat: null,
-      second_columns_repeat: null,
-      first_rows_repeat: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#EDEDED",
-        },
-      },
-      second_rows_repeat: null,
-      last_column: null,
-      first_column: null,
-      header_row: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: "11px",
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#C3C3C3",
-        },
-      },
-      footer_row: null,
-    },
+    key: "Type-C",
+    label: "typeC",
+    elements: [],
   },
 ]
