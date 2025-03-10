@@ -8,6 +8,7 @@ import { useSelector } from "react-redux"
 import styled from "styled-components"
 
 import { OVERVIEW_TABLES } from "../../constants/menu"
+import { DEFAULT_FORMAT_ITEMS } from "../../constants/options"
 import { useDocumentId } from "../../hooks/useDocumentId"
 import { selectNameById } from "../../store/organizationNames/organizationNamesSlice"
 
@@ -41,16 +42,11 @@ const ActionHandler = ({
   const { documentId, organizationId } = useDocumentId()
   const [fileName, setFileName] = useState("")
   const org = useSelector((state) => selectNameById(state, organizationId))
-  const selectedFormat = useSelector((state) => state.format)
-    const formatKey = useSelector((state) => state.modals.formatter.key)
-    const selectedFormat = useSelector((state) =>
-      selectFormatItemByKey(state, formatKey)
-    )
 
   // Selected Format: Type-A
   const selectedFormat = DEFAULT_FORMAT_ITEMS.find(
     (item) => item.key === "typeA"
-  );
+  )
 
   useEffect(() => {
     const parentName = documentId
@@ -62,11 +58,11 @@ const ActionHandler = ({
     [documentId, organizationId, org]
 
   useEffect(() => {
-    // console.log("rowData: ", rowData)
+    console.log("rowData: ", rowData)
   }, [rowData])
 
   useEffect(() => {
-    // console.log("columns: ", columns)
+    console.log("columns: ", columns)
   }, [columns])
 
   const downloadExcel = async () => {
@@ -80,38 +76,38 @@ const ActionHandler = ({
       first_column,
       header_row,
       footer_row,
-    } = selectedFormat.elements;
+    } = selectedFormat.elements
 
-    console.log("Elements: ", selectedFormat.elements);
+    console.log("Elements: ", selectedFormat.elements)
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(`${fileName}`);
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet(`${fileName}`)
 
-    console.log("columns: ", columns);
+    console.log("columns: ", columns)
 
     // ✅ 컬럼 설정
     worksheet.columns = columns.map((col) => {
-      const parts = col.field.split("_");
+      const parts = col.field.split("_")
       const isAmoutField =
         parts[parts.length - 1] === "cost" ||
-        parts[parts.length - 1] === "price";
-      const isRateField = parts[parts.length - 1] === "rate";
+        parts[parts.length - 1] === "price"
+      const isRateField = parts[parts.length - 1] === "rate"
 
       return {
         header: col.headerName,
         key: col.field,
         width: col.cellDataType === "date" ? 20 : 15,
         style: isAmoutField ? { numFmt: "#,##0" } : undefined,
-      };
-    });
+      }
+    })
 
     // ✅ 데이터 추가
     rowData.forEach((row, index) => {
       for (const key in row) {
         row[key] = row[key] === null ? "" : row[key]
       }
-      worksheet.addRow(row);
-      const addedRow = worksheet.getRow(index + 2);
+      worksheet.addRow(row)
+      const addedRow = worksheet.getRow(index + 2)
       addedRow.eachCell((cell) => {
         cell.border = {
           top: { style: "thin" },
@@ -123,10 +119,10 @@ const ActionHandler = ({
       })
     })
 
-    const mapper = {};
+    const mapper = {}
 
     for (const key in selectedFormat.elements) {
-      const item = selectedFormat.elements[key];
+      const item = selectedFormat.elements[key]
 
       if (item) {
         mapper[key] = {
@@ -135,73 +131,73 @@ const ActionHandler = ({
             color: item.styles.color,
           },
           cells: [],
-        };
-        console.log(JSON.parse(item.styles.textDecorationLine));
-        const temp1 = JSON.parse(item.styles.fontSize);
+        }
+        console.log(JSON.parse(item.styles.textDecorationLine))
+        const temp1 = JSON.parse(item.styles.fontSize)
         for (const k in temp1) {
-          mapper[key].styles[k] = temp1[k];
+          mapper[key].styles[k] = temp1[k]
         }
-        const temp2 = JSON.parse(item.styles.fontStyle);
+        const temp2 = JSON.parse(item.styles.fontStyle)
         for (const k in temp2) {
-          mapper[key].styles[k] = temp2[k];
+          mapper[key].styles[k] = temp2[k]
         }
-        const temp3 = JSON.parse(item.styles.textDecorationLine);
+        const temp3 = JSON.parse(item.styles.textDecorationLine)
         for (const k in temp3) {
-          mapper[key].styles[k] = temp3[k];
+          mapper[key].styles[k] = temp3[k]
         }
       }
     }
 
     worksheet.columns.forEach((item, index) => {
-      const number = index + 1;
-      const col = worksheet.getColumn(number);
+      const number = index + 1
+      const col = worksheet.getColumn(number)
 
       // column repeat style
       if (first_columns_repeat && number % 2 === 0) {
         col.eachCell({ includeEmpty: true }, (cell) =>
           mapper.first_column_repeat.cells.push(cell)
-        );
+        )
       } else if (second_columns_repeat && number % 2 === 1) {
         col.eachCell({ includeEmpty: true }, (cell) =>
           mapper.second_columns_repeat.cells.push(cell)
-        );
+        )
       }
 
       // column first & second style
       if (first_column && number === 1) {
         col.eachCell({ includeEmpty: true }, (cell) =>
           mapper.first_column.cells.push(cell)
-        );
+        )
       } else if (last_column && number === worksheet.columns.length) {
         col.eachCell({ includeEmpty: true }, (cell) =>
           mapper.last_column.cells.push(cell)
-        );
+        )
       }
 
       col.eachCell({ includeEmpty: true }, (cell, rowNumber) => {
-        const row = worksheet.getRow(rowNumber);
-        row.height = 22;
+        const row = worksheet.getRow(rowNumber)
+        row.height = 22
         // row repeat style
         if (first_rows_repeat && rowNumber % 2 === 0) {
-          mapper.first_rows_repeat.cells.push(cell);
+          mapper.first_rows_repeat.cells.push(cell)
         } else if (second_rows_repeat && rowNumber % 2 === 1) {
-          mapper.second_rows_repeat.cells.push(cell);
+          mapper.second_rows_repeat.cells.push(cell)
         }
 
         // row first & last style
         if (header_row && rowNumber === 1) {
-          mapper.header_row.cells.push(cell);
+          mapper.header_row.cells.push(cell)
         } else if (footer_row && rowNumber === worksheet.rowCount) {
-          mapper.footer_row.cells.push(cell);
+          mapper.footer_row.cells.push(cell)
         }
-      });
-    });
+      })
+    })
 
-    console.log("mapper: ", mapper);
+    console.log("mapper: ", mapper)
 
     for (const element in mapper) {
-      const cells = mapper[element].cells;
-      const styles = mapper[element].styles;
+      const cells = mapper[element].cells
+      const styles = mapper[element].styles
 
       cells.forEach((cell) => {
         cell.font = {
@@ -211,20 +207,20 @@ const ActionHandler = ({
           italic: styles.fontStyle === "italic",
           underline: styles.textDecorationLine === "underline",
           strike: styles.textDecorationLine === "line-through",
-        };
+        }
         cell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: styles.backgroundColor.replace("#", "") },
-        };
-        cell.alignment = { horizontal: "center", vertical: "middle" };
+        }
+        cell.alignment = { horizontal: "center", vertical: "middle" }
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
           bottom: { style: "thin" },
           right: { style: "thin" },
-        };
-      });
+        }
+      })
     }
 
     // ✅ 첫 번째 행 고정 (Freeze)
@@ -243,9 +239,7 @@ const ActionHandler = ({
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     })
 
-    console.log("selectedFormat: ", selectedFormat)
-
-    // saveAs(blob, `${yyyymmdd}_${fileName}.xlsx`)
+    saveAs(blob, `${yyyymmdd}_${fileName}.xlsx`)
   }
 
   return (
@@ -265,7 +259,7 @@ const ActionHandler = ({
           저장
         </Button>
         <ExcelButton
-          disabled={!rowData.length || }
+          disabled={!rowData.length}
           color="default"
           variant="filled"
           icon={<DownloadOutlined />}

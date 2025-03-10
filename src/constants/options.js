@@ -88,14 +88,47 @@ export const UNDERLINE_OPTIONS = [
 
 export const DEFAULT_FORMAT_ITEMS = [
   {
-    key: "Type-A",
-    label: "typeA",
+    label: "Type-A",
+    key: "typeA",
     elements: {
       all: null,
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        style: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: '{"fontSize": "11px"}',
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#EDEDED",
+        },
+      },
+      second_rows_repeat: null,
+      last_column: null,
+      first_column: null,
+      header_row: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"bold"}',
+          fontSize: '{"fontSize": "11px"}',
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#C3C3C3",
+        },
+      },
+      footer_row: null,
+    },
+  },
+  {
+    label: "Type-B",
+    key: "typeB",
+    elements: {
+      all: null,
+      first_columns_repeat: null,
+      second_columns_repeat: null,
+      first_rows_repeat: {
+        styles: {
           fontStyle: "normal",
           fontWeight: "normal",
           fontSize: 11,
@@ -108,7 +141,7 @@ export const DEFAULT_FORMAT_ITEMS = [
       last_column: null,
       first_column: null,
       header_row: {
-        style: {
+        styles: {
           fontStyle: "normal",
           fontWeight: "bold",
           fontSize: 11,
@@ -121,13 +154,36 @@ export const DEFAULT_FORMAT_ITEMS = [
     },
   },
   {
-    key: "Type-B",
-    label: "typeB",
-    elements: [],
-  },
-  {
-    key: "Type-C",
-    label: "typeC",
-    elements: [],
+    label: "Type-C",
+    key: "typeC",
+    elements: {
+      all: null,
+      first_columns_repeat: null,
+      second_columns_repeat: null,
+      first_rows_repeat: {
+        styles: {
+          fontStyle: "normal",
+          fontWeight: "normal",
+          fontSize: 11,
+          textDecorationLine: "none",
+          color: "#000000",
+          backgroundColor: "#EDEDED",
+        },
+      },
+      second_rows_repeat: null,
+      last_column: null,
+      first_column: null,
+      header_row: {
+        styles: {
+          fontStyle: "normal",
+          fontWeight: "bold",
+          fontSize: 11,
+          textDecorationLine: "none",
+          color: "#000000",
+          backgroundColor: "#C3C3C3",
+        },
+      },
+      footer_row: null,
+    },
   },
 ]
