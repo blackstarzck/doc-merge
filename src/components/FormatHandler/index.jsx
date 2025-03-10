@@ -1,122 +1,128 @@
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Divider, Form, Input, Select, Space, Tag } from "antd";
-import { useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import styled from "styled-components";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons"
+import { Button, Divider, Flex, Form, Input, Select, Space, Tag } from "antd"
+import { useRef, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import styled from "styled-components"
 
-import { DEFAULT_FORMAT_ITEMS } from "../../constants/options";
-import { setVisibleState } from "../../store/modals/modalsSlice";
-import FormatModal from "../FormatModal";
-
-let index = 0;
-const LOCAL_STORAGE_KEY = "formatItems";
+import { TABLE_ELEMENTS } from "../../constants/options"
+import { setFormat } from "../../store/format/formatSlice"
+import {
+  addFormatItem,
+  removeFormatItem,
+  selectAllFormatItems,
+} from "../../store/formatItems/formatItemsSlice"
+import { updateContents } from "../../store/modals/modalsSlice"
+import FormatModal from "../FormatModal"
 
 const setUniqueNumber = (array) => {
   // "custom-"으로 시작하는 항목 필터링 및 숫자 추출
   const customNumbers = array
     .map((item) => item.key.match(/^custom-(\d+)$/)) // "custom-" 다음 숫자 찾기
     .filter(Boolean) // null 값 제거
-    .map((match) => Number(match[1])); // 숫자로 변환
+    .map((match) => Number(match[1])) // 숫자로 변환
 
-  let newNumber;
+  let newNumber
 
   if (customNumbers.length === 0) {
     // "custom-" 항목이 없으면 첫 번째 항목으로 "custom-1" 추가
-    newNumber = 1;
+    newNumber = 1
   } else {
     // 1부터 최대 숫자 사이에서 비어있는 숫자 찾기
     for (let i = 1; i <= Math.max(...customNumbers) + 1; i++) {
       if (!customNumbers.includes(i)) {
-        newNumber = i;
-        break;
+        newNumber = i
+        break
       }
     }
   }
-  return newNumber;
-};
+  return newNumber
+}
 
 const FormatHandler = () => {
-  const [form] = Form.useForm();
-  const [formatItems, setFormatItems] = useState(() => {
-    const items = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return items ? JSON.parse(items) : DEFAULT_FORMAT_ITEMS;
-  });
-  const inputRef = useRef(null);
-  const [isDisabled, setIsDisabled] = useState(true);
-  const dispatch = useDispatch();
+  const [form] = Form.useForm()
+  const inputRef = useRef(null)
+  const [isDisabled, setIsDisabled] = useState(true)
+  const formatItems = useSelector(selectAllFormatItems)
+  const dispatch = useDispatch()
 
   const onNameChange = (event) => {
-    setIsDisabled((prev) => !form.getFieldValue("customFormatName"));
-  };
+    setIsDisabled((prev) => !form.getFieldValue("customFormatName"))
+  }
 
   const addItem = (e) => {
-    // e.preventDefault();
-
-    console.log("addItem: ", inputRef);
-
-    // Submit form to trigger validation
     form
       .validateFields()
       .then(() => {
-        setFormatItems((prev) => {
-          const newNumber = setUniqueNumber(prev);
-          const newItems = [
-            ...prev,
-            {
-              key: `custom-${newNumber}`,
-              label: form.getFieldValue("customFormatName"),
-              elements: null,
-            },
-          ];
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newItems));
-          return newItems;
-        });
+        const newNumber = setUniqueNumber(formatItems)
+        const item = {
+          key: `custom-${newNumber}`,
+          label: form.getFieldValue("customFormatName"),
+          elements: null,
+        }
+        TABLE_ELEMENTS.forEach((element) => {
+          item.elements = { ...item.elements, [element.key]: null }
+        })
+        console.log("item: ", item)
+        dispatch(addFormatItem(item))
 
-        form.setFieldValue("customFormatName", "");
+        form.setFieldValue("customFormatName", "")
 
         setTimeout(() => {
-          inputRef.current?.focus();
-        }, 0);
+          inputRef.current?.focus()
+        }, 0)
       })
       .catch((error) => {
-        console.log("Validation failed:", error);
-      });
-  };
+        console.log("Validation failed:", error)
+      })
+  }
 
-  const onClickDeleteFormat = (key) => {
-    setFormatItems((prev) => {
-      const newItems = prev.filter((item) => item.key !== key);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newItems));
-      return newItems;
-    });
-  };
+  const onClickDeleteFormat = (e, key) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dispatch(removeFormatItem(key))
+  }
 
-  const openFormatter = () => {
-    setTimeout(() => {
-      dispatch(setVisibleState({ modalName: "formatter", visible: true }));
-    }, 200);
-  };
+  const onClickEditFormat = (e, key) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const find = formatItems.find((item) => item.key === key)
+
+    console.log("find: ", find)
+
+    dispatch(
+      updateContents({
+        modalName: "formatter",
+        key,
+        label: find.label,
+        visible: true,
+        elements: find.elements,
+      })
+    )
+  }
 
   const validateSameName = (_, value) => {
-    const filter = formatItems.filter((item) => item.label === value);
-    const isSameName = filter.length > 0;
+    const filter = formatItems.filter((item) => item.label === value)
+    const isSameName = filter.length > 0
 
     if (isSameName) {
-      return Promise.reject(new Error("존재하는 서식이름입니다"));
+      return Promise.reject(new Error("존재하는 서식이름입니다"))
     }
-    return Promise.resolve();
-  };
+    return Promise.resolve()
+  }
 
   return (
     <>
       <Wrapper>
         <Select
+          defaultValue={formatItems[0].label}
           style={{ width: 300 }}
-          onSelect={(data) => {
-            if (data.includes("custom")) openFormatter();
+          onSelect={(key) => {
+            const find = formatItems.find((item) => item.key === key)
+            dispatch(setFormat(find))
           }}
           onDropdownVisibleChange={() => {
-            form.setFieldValue("customFormatName", "");
+            form.setFieldValue("customFormatName", "")
           }}
           optionLabelProp="key"
           options={formatItems.map((item) => ({
@@ -129,16 +135,20 @@ const FormatHandler = () => {
                   <span>{item.label}</span>
                 </div>
                 {item.key.includes("custom") && (
-                  <Button
-                    variant="text"
-                    color="defalut"
-                    icon={<DeleteOutlined />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onClickDeleteFormat(item.key);
-                    }}
-                  />
+                  <Flex gap={6}>
+                    <Button
+                      variant="text"
+                      color="defalut"
+                      icon={<EditOutlined />}
+                      onClick={(e) => onClickEditFormat(e, item.key)}
+                    />
+                    <Button
+                      variant="text"
+                      color="defalut"
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => onClickDeleteFormat(e, item.key)}
+                    />
+                  </Flex>
                 )}
               </OptionWrapper>
             ),
@@ -184,32 +194,32 @@ const FormatHandler = () => {
                   </FormWrapper>
                 </Space>
               </>
-            );
+            )
           }}
         />
       </Wrapper>
 
       <FormatModal />
     </>
-  );
-};
+  )
+}
 
 const OptionWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-`;
+`
 
 const Wrapper = styled.div`
   display: flex;
   justify-content: flex-end;
-`;
+`
 
 const FormWrapper = styled(Form)`
   display: flex;
   justify-content: space-between;
   margin-top: 16px;
   gap: 8px;
-`;
+`
 
-export default FormatHandler;
+export default FormatHandler

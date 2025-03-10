@@ -3,111 +3,48 @@ export const TABLE_ELEMENTS = [
     key: "all",
     label: "전체 표",
     isSelected: false,
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "first_columns_repeat", // 0 % 2 나머지값 0 에 적용
     label: "열 줄무늬",
     isSelected: false,
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "second_columns_repeat", // 0 % 2 나머지값 1 에 적용
     label: "둘째 열 줄무늬",
     isSelected: false,
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "first_rows_repeat", // 0 % 2 나머지값 0 에 적용
     label: "첫 행 줄무늬",
     isSelected: false,
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "second_rows_repeat", // 0 % 2 나머지값 1 에 적용
     label: "둘째 행 줄무늬",
     isSelected: false,
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "last_column",
     isSelected: false,
     label: "마지막 열",
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "first_column",
     isSelected: false,
     label: "첫째 열",
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "header_row",
     isSelected: false,
     label: "머리글 행",
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
   {
     key: "footer_row",
     isSelected: false,
     label: "요약 행",
-    styles: {
-      fontStyle: null,
-      fontSize: null,
-      uderline: null,
-      color: null,
-      backgroundColor: null,
-    },
   },
-];
+]
 
 export const FONT_STYLE_OPTIONS = [
   {
@@ -126,12 +63,12 @@ export const FONT_STYLE_OPTIONS = [
     value: '{"fontStyle":"italic","fontWeight":"bold"}',
     label: "굵은 기울임꼴",
   },
-];
+]
 
 export const FONT_SIZE_OPTIONS = Array.from({ length: 24 - 6 + 1 }, (_, i) => ({
   value: `{"fontSize": "${i + 6}px"}`,
   label: `${i + 6}px`,
-}));
+}))
 
 export const UNDERLINE_OPTIONS = [
   {
@@ -147,22 +84,22 @@ export const UNDERLINE_OPTIONS = [
       '{"textDecorationLine":"line-through","textDecorationStyle":"solid"}',
     label: "취소선",
   },
-];
+]
 
 export const DEFAULT_FORMAT_ITEMS = [
   {
-    key: "Type-A",
-    label: "typeA",
+    label: "Type-A",
+    key: "typeA",
     elements: {
       all: null,
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        style: {
-          fontStyle: "normal",
-          fontWeight: "normal",
-          fontSize: 11,
-          textDecorationLine: "none",
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
           color: "#000000",
           backgroundColor: "#EDEDED",
         },
@@ -171,11 +108,11 @@ export const DEFAULT_FORMAT_ITEMS = [
       last_column: null,
       first_column: null,
       header_row: {
-        style: {
-          fontStyle: "normal",
-          fontWeight: "bold",
-          fontSize: 11,
-          textDecorationLine: "none",
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
           color: "#000000",
           backgroundColor: "#C3C3C3",
         },
@@ -184,13 +121,69 @@ export const DEFAULT_FORMAT_ITEMS = [
     },
   },
   {
-    key: "Type-B",
-    label: "typeB",
-    elements: [],
+    label: "Type-B",
+    key: "typeB",
+    elements: {
+      all: null,
+      first_columns_repeat: null,
+      second_columns_repeat: null,
+      first_rows_repeat: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#EDEDED",
+        },
+      },
+      second_rows_repeat: null,
+      last_column: null,
+      first_column: null,
+      header_row: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#C3C3C3",
+        },
+      },
+      footer_row: null,
+    },
   },
   {
-    key: "Type-C",
-    label: "typeC",
-    elements: [],
+    label: "Type-C",
+    key: "typeC",
+    elements: {
+      all: null,
+      first_columns_repeat: null,
+      second_columns_repeat: null,
+      first_rows_repeat: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#EDEDED",
+        },
+      },
+      second_rows_repeat: null,
+      last_column: null,
+      first_column: null,
+      header_row: {
+        styles: {
+          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+          fontSize: "11px",
+          textDecorationLine:
+            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+          color: "#000000",
+          backgroundColor: "#C3C3C3",
+        },
+      },
+      footer_row: null,
+    },
   },
-];
+]

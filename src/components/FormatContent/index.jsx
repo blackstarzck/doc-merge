@@ -1,4 +1,4 @@
-import { CheckCircleTwoTone } from "@ant-design/icons";
+import { CheckCircleTwoTone } from "@ant-design/icons"
 import {
   Button,
   Col,
@@ -10,33 +10,38 @@ import {
   Row,
   Select,
   theme,
-} from "antd";
-import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled, { css } from "styled-components";
+} from "antd"
+import { useCallback, useEffect, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import styled, { css } from "styled-components"
 
 import {
   FONT_SIZE_OPTIONS,
   FONT_STYLE_OPTIONS,
   TABLE_ELEMENTS,
   UNDERLINE_OPTIONS,
-} from "../../constants/options";
-import { flattenObject } from "../../utils";
-import Preview from "../Preview";
+} from "../../constants/options"
+import { setFormat } from "../../store/format/formatSlice"
+import {
+  selectFormatItemByKey,
+  updateFormatItem,
+} from "../../store/formatItems/formatItemsSlice"
+import { updateContents } from "../../store/modals/modalsSlice"
+import Preview from "../Preview"
 
-const { Item } = Form;
+const { Item } = Form
 
-const MenuItem = ({ styles, children }) => {
+const MenuItem = ({ hasStyles, children }) => {
   const {
     token: { colorPrimary },
-  } = theme.useToken();
+  } = theme.useToken()
   return (
-    <Wrap $hasStyles={styles} $colorPrimary={colorPrimary}>
+    <Wrap $hasStyles={hasStyles} $colorPrimary={colorPrimary}>
       <span>{children}</span>
-      {styles && <CheckCircleTwoTone twoToneColor={colorPrimary} />}
+      {hasStyles && <CheckCircleTwoTone twoToneColor={colorPrimary} />}
     </Wrap>
-  );
-};
+  )
+}
 
 const Wrap = styled.div`
   display: flex;
@@ -47,11 +52,11 @@ const Wrap = styled.div`
       if ($hasStyles) {
         return css`
           color: ${$colorPrimary};
-        `;
+        `
       }
     }};
   }
-`;
+`
 
 const defaultStyles = {
   fontSize: FONT_SIZE_OPTIONS[5].value,
@@ -60,80 +65,69 @@ const defaultStyles = {
   textDecorationColor: "#000000",
   color: "#000000",
   backgroundColor: "#ffffff",
-};
+}
 
 const FormatContent = ({ handleCancel, saveNewFormat }) => {
-  const [form] = Form.useForm();
-  const [styles, setStyles] = useState(defaultStyles);
-  const [menuItems, setMenuItems] = useState(TABLE_ELEMENTS);
-  const [isFormDisabled, setFormDisabled] = useState(true);
-  const [isSaveDisabled, setSaveDisabled] = useState(false);
-  const [gridStyles, setGridStyles] = useState({});
-  const [selectedKeys, setSelectedKeys] = useState(); // 리스트 모두 styles 가 없을때 비활성화
-  const isVisible = useSelector((state) => state.modals?.formatter.visible);
-
+  const [form] = Form.useForm()
+  const [styles, setStyles] = useState(defaultStyles)
+  const selectedFormat = useSelector((state) => state.modals.modals.formatter)
+  const dispatch = useDispatch()
+  const [elements, setElements] = useState([])
+  const [selectedKeys, setSelectedKeys] = useState(null) // 리스트 모두 styles 가 없을때 비활성화
+  const isVisible = useSelector(
+    (state) => state.modals.modals.formatter.visible
+  )
   const {
     token: { colorBorder },
-  } = theme.useToken();
+  } = theme.useToken()
 
   const handleValuesChange = (data) => {
-    const [[key, value]] = Object.entries(data);
+    const [[key, value]] = Object.entries(data)
     const parsedValue =
       key === "color" || key === "backgroundColor"
         ? { [key]: value.toHexString() }
-        : { [key]: value };
+        : { [key]: value }
 
-    setStyles((prev) => ({ ...prev, ...parsedValue }));
-  };
-
-  const handleMenuClick = (e) => {
-    setSelectedKeys(e.key); // 선택된 메뉴 항목을 업데이트
-  };
-
-  const handleDeselect = () => {
-    setSelectedKeys(""); // 선택된 항목을 해제
-  };
-
-  const handleDeleteStyles = (key) => {
-    setMenuItems((prev) =>
-      prev.map((item) => (item.key === key ? { ...item, styles: null } : item))
-    );
-  };
+    setStyles((prev) => {
+      const update = { ...prev, ...parsedValue }
+      return update
+    })
+  }
 
   const initReset = useCallback(() => {
-    setStyles(defaultStyles);
-    setMenuItems((prev) => prev.map((item) => ({ ...item, styles: null })));
-    form.resetFields();
-  }, [form]);
+    setStyles(defaultStyles)
+    setSelectedKeys(null)
+    // form.resetFields()
+  }, [form])
+
+  useEffect(() => {
+    console.log("====================================")
+    console.log("selectedFormat: ", selectedFormat)
+    console.log("====================================")
+    if (isVisible) {
+      const selectedElemenets = []
+      for (const key in selectedFormat.elements) {
+        selectedElemenets.push({
+          key,
+          label: TABLE_ELEMENTS.find((item) => item.key === key).label,
+          styles: selectedFormat.elements[key]?.styles,
+        })
+      }
+      setElements(selectedElemenets)
+    }
+  }, [selectedFormat])
 
   useEffect(() => {
     if (!isVisible) {
-      initReset();
-      handleCancel();
-      handleDeselect();
+      initReset()
+      handleCancel()
     }
-  }, [handleCancel, initReset, isVisible]);
+  }, [isVisible])
 
   useEffect(() => {
-    const selectedItem = menuItems.find((item) => item.isSelected);
-    const styles = selectedItem?.styles || defaultStyles;
-    const gridStyles = {};
-
-    menuItems.forEach((item) => {
-      if (item.styles) {
-        gridStyles[item.key] = flattenObject(item.styles);
-        setGridStyles((prev) => ({ ...prev, ...gridStyles }));
-      }
-    });
-
-    Object.keys(gridStyles).length > 0
-      ? setSaveDisabled(false)
-      : setSaveDisabled(true);
-
-    form.setFieldsValue(styles);
-
-    setStyles(styles);
-  }, [menuItems, form]);
+    form.setFieldsValue(styles)
+    setStyles(styles)
+  }, [form, styles])
 
   return (
     <ContentBody>
@@ -147,27 +141,29 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
           <MenuWrapper $colorBorder={colorBorder}>
             <Menu
               selectedKeys={selectedKeys}
-              onClick={handleMenuClick}
               onSelect={({ key }) => {
-                if (isFormDisabled) setFormDisabled(false);
-                setMenuItems((prev) => {
-                  return prev.map((item) => ({
-                    ...item,
-                    isSelected: item.key === key ? true : false,
-                  }));
-                });
+                const find = elements.find((item) => item.key === key)
+                const styles = find.styles ? find.styles : defaultStyles
+
+                console.log("find: ", find)
+                console.log("onSelect", key)
+                console.log("styles: ", find.styles || defaultStyles)
+                console.log("[1] form getFieldsValue: ", form.getFieldsValue())
+
+                setSelectedKeys(key)
+                setStyles(styles)
+                form.setFieldsValue(styles)
+                console.log("[2] form getFieldsValue: ", form.getFieldsValue())
               }}
               mode="inline"
-              items={menuItems.map((item) => {
-                return {
-                  key: item.key,
-                  label: (
-                    <MenuItem styles={item.styles ? true : false}>
-                      {item.label}
-                    </MenuItem>
-                  ),
-                };
-              })}
+              items={elements.map((item) => ({
+                key: item.key,
+                label: (
+                  <MenuItem hasStyles={item.styles ? true : false}>
+                    {item.label}
+                  </MenuItem>
+                ),
+              }))}
             />
           </MenuWrapper>
         </ColWrapper>
@@ -177,7 +173,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
             <h4>미리 보기</h4>
           </Head>
           {/* [1] 미리보기 */}
-          <Preview type="grid" settings={menuItems} />
+          <Preview type="grid" settings={null} />
         </ColWrapper>
       </Row>
       <Divider />
@@ -186,7 +182,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
         {/* 위쪽 */}
         <ColWrapper span={12}>
           <Form
-            disabled={isFormDisabled}
+            disabled={!selectedKeys}
             form={form}
             onValuesChange={handleValuesChange}
             layout="vertical"
@@ -238,27 +234,43 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
             <h4>미리 보기</h4>
             <div>
               <Button
-                disabled={isFormDisabled}
+                disabled={!selectedKeys}
                 size="small"
                 color="default"
                 variant="text"
                 onClick={() => {
-                  setMenuItems((prev) =>
-                    prev.map((item) =>
-                      item.isSelected ? { ...item, styles } : { ...item }
-                    )
-                  );
+                  const element = selectedFormat.elements[selectedKeys]
+                  const update = {
+                    ...selectedFormat,
+                    elements: {
+                      ...selectedFormat.elements,
+                      [selectedKeys]: { ...element, styles },
+                    },
+                  }
+                  dispatch(updateContents(update))
                 }}
               >
                 저장
               </Button>
               <Divider type="vertical" />
               <Button
-                disabled={isFormDisabled}
+                disabled={!selectedKeys}
                 size="small"
                 color="default"
                 variant="text"
-                onClick={() => handleDeleteStyles(selectedKeys)}
+                onClick={() => {
+                  const element = selectedFormat.elements[selectedKeys]
+                  setStyles(defaultStyles)
+                  dispatch(
+                    updateContents({
+                      ...selectedFormat,
+                      elements: {
+                        ...selectedFormat.elements,
+                        [selectedKeys]: { ...element, styles: null },
+                      },
+                    })
+                  )
+                }}
               >
                 지우기
               </Button>
@@ -271,12 +283,25 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
       </Row>
       <Flex gap="middle" justify="end" style={{ padding: "46px 0 24px 0" }}>
         <Button
-          disabled={isSaveDisabled || Object.keys(gridStyles).length === 0}
+          size="large"
+          disabled={false}
           onClick={() => {
-            const hasStyles = Object.keys(gridStyles).length > 0;
-            if (hasStyles) saveNewFormat(gridStyles);
-            initReset();
-            handleCancel();
+            const element = selectedFormat.elements[selectedKeys]
+
+            // dispatch(setFormat())
+            dispatch(
+              updateFormatItem({
+                id: selectedFormat.key,
+                changes: {
+                  elements: {
+                    ...selectedFormat.elements,
+                    [selectedKeys]: { ...element, styles },
+                  },
+                },
+              })
+            )
+            initReset()
+            handleCancel()
           }}
           type="primary"
         >
@@ -284,8 +309,8 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
         </Button>
       </Flex>
     </ContentBody>
-  );
-};
+  )
+}
 
 const MenuWrapper = styled.div`
   border-width: 1px;
@@ -301,11 +326,11 @@ const MenuWrapper = styled.div`
   & > ul {
     border-inline-end: none !important;
   }
-`;
+`
 
 const ContentBody = styled.div`
   padding-top: 24px;
-`;
+`
 
 const Head = styled.div`
   display: flex;
@@ -316,12 +341,12 @@ const Head = styled.div`
   & > div span {
     color: #555555;
   }
-`;
+`
 
 const ColWrapper = styled(Col)`
   display: flex;
   flex-direction: column;
-`;
+`
 
 const ItemWrapper = styled(Item)`
   margin-bottom: 0;
@@ -331,6 +356,6 @@ const ItemWrapper = styled(Item)`
     width: 100%;
     justify-content: start;
   }
-`;
+`
 
-export default FormatContent;
+export default FormatContent

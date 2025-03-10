@@ -1,38 +1,36 @@
-import { Divider, Select, theme } from "antd";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
+import { Divider, Select, theme } from "antd"
+import { useEffect, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import styled from "styled-components"
 
-import { useDocumentId } from "../../hooks/useDocumentId";
+import { useDocumentId } from "../../hooks/useDocumentId"
 import {
   getOrgNames,
   selectAllNames,
-} from "../../store/organizationNames/organizationNamesSlice";
+} from "../../store/organizationNames/organizationNamesSlice"
 
-const defaultVal = 0;
+const defaultVal = 0
 
 const SiderSelectSection = ({ handleDocumentId }) => {
-  const { documentId, organizationId } = useDocumentId();
-  const [isSelected, setIsSelected] = useState(false);
-  const names = useSelector(selectAllNames);
-  const dispatch = useDispatch();
+  const { documentId, organizationId } = useDocumentId()
+  const [isSelected, setIsSelected] = useState(false)
+  const names = useSelector(selectAllNames)
+  const dispatch = useDispatch()
   const {
     token: { colorPrimary },
-  } = theme.useToken();
-
-  console.log("organizationId: ", typeof organizationId);
+  } = theme.useToken()
 
   useEffect(() => {
-    dispatch(getOrgNames());
-  }, []);
+    dispatch(getOrgNames())
+  }, [])
 
   useEffect(() => {
-    setIsSelected(() => (documentId ? false : true));
-  }, [documentId, organizationId]);
+    setIsSelected(() => (documentId ? false : true))
+  }, [documentId, organizationId])
 
   useEffect(() => {
-    console.log("names: ", names);
-  }, [names]);
+    // console.log("names: ", names);
+  }, [names])
 
   return (
     <Wrapper>
@@ -55,13 +53,13 @@ const SiderSelectSection = ({ handleDocumentId }) => {
       />
       {}
     </Wrapper>
-  );
-};
+  )
+}
 
 const Wrapper = styled.div`
   width: 100%;
   padding: 0 4px;
-`;
+`
 
 const SelectWrapper = styled(Select)`
   width: 100%;
@@ -89,6 +87,6 @@ const SelectWrapper = styled(Select)`
     color: ${(props) =>
       props.$isSelected ? props.$primary : "#ffffff"} !important;
   }
-`;
+`
 
-export default SiderSelectSection;
+export default SiderSelectSection

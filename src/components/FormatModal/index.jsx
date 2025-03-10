@@ -1,58 +1,62 @@
-import { Modal } from "antd";
-import { useEffect, useRef, useState } from "react";
-import Draggable from "react-draggable";
-import { useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
+import { Modal } from "antd"
+import { useEffect, useRef, useState } from "react"
+import Draggable from "react-draggable"
+import { useDispatch, useSelector } from "react-redux"
+import styled from "styled-components"
 
-import { setVisibleState } from "../../store/modals/modalsSlice";
-import FormatContent from "../FormatContent";
+import { updateContents } from "../../store/modals/modalsSlice"
+import FormatContent from "../FormatContent"
 
-const MODAL_NAME = "formatter";
+const MODAL_NAME = "formatter"
 
 const FormatModal = () => {
   const isVisible = useSelector(
-    (state) => state.modals?.formatter && state.modals?.formatter.visible
-  );
-  const dispatch = useDispatch();
-  const [newFormat, setNewFormat] = useState();
-  const [disabled, setDisabled] = useState(true);
+    (state) => state.modals.modals.formatter.visible
+  )
+  const dispatch = useDispatch()
+  const [newFormat, setNewFormat] = useState()
+  const [disabled, setDisabled] = useState(true)
   const [bounds, setBounds] = useState({
     left: 0,
     top: 0,
     bottom: 0,
     right: 0,
-  });
-  const draggleRef = useRef(null);
+  })
+  const draggleRef = useRef(null)
 
   // ✅ 모달이 열릴 때마다 드래그 위치 초기화
   useEffect(() => {
     if (isVisible && draggleRef.current) {
-      draggleRef.current.style.transform = "none"; // 위치 초기화
+      draggleRef.current.style.transform = "none" // 위치 초기화
     }
-  }, [isVisible]);
+  }, [isVisible])
 
   const saveNewFormat = (styles) => {
-    console.log("saveNewFormat: ", styles); // 모달에서 전달한 저장된 스타일값을 어디에 저장해야함
-    dispatch(setVisibleState({ modalName: MODAL_NAME, visible: false }));
-  };
+    console.log("saveNewFormat: ", styles) // 모달에서 전달한 저장된 스타일값을 어디에 저장해야함
+    dispatch(
+      updateContents({ modalName: MODAL_NAME, key: null, visible: false })
+    )
+  }
 
   const handleCancel = () => {
-    dispatch(setVisibleState({ modalName: MODAL_NAME, visible: false }));
-  };
+    dispatch(
+      updateContents({ modalName: MODAL_NAME, key: null, visible: false })
+    )
+  }
 
   const onDragStart = (_event, uiData) => {
-    const { clientWidth, clientHeight } = window.document.documentElement;
-    const targetRect = draggleRef.current?.getBoundingClientRect();
+    const { clientWidth, clientHeight } = window.document.documentElement
+    const targetRect = draggleRef.current?.getBoundingClientRect()
     if (!targetRect) {
-      return;
+      return
     }
     setBounds({
       left: -targetRect.left + uiData.x,
       right: clientWidth - (targetRect.right - uiData.x),
       top: -targetRect.top + uiData.y,
       bottom: clientHeight - (targetRect.bottom - uiData.y),
-    });
-  };
+    })
+  }
 
   return (
     <>
@@ -62,11 +66,11 @@ const FormatModal = () => {
             style={{ width: "100%", cursor: "move" }}
             onMouseOver={() => {
               if (disabled) {
-                setDisabled(false);
+                setDisabled(false)
               }
             }}
             onMouseOut={() => {
-              setDisabled(true);
+              setDisabled(true)
             }}
             onFocus={() => {}}
             onBlur={() => {}}
@@ -105,13 +109,13 @@ const FormatModal = () => {
         />
       </ModalWrapper>
     </>
-  );
-};
+  )
+}
 
 const ModalWrapper = styled(Modal)`
   & * {
     user-select: none;
   }
-`;
+`
 
-export default FormatModal;
+export default FormatModal

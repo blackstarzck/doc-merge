@@ -94,7 +94,6 @@ const TableSection = () => {
       })
     )
       .then((res) => {
-        console.log("res: ", res)
         const data = res.payload ? structuredClone(res.payload) : []
         const dateTypesColumns = currentDocumentColumns
           .filter((item) => item.type === "date")
@@ -107,7 +106,6 @@ const TableSection = () => {
           return item
         })
 
-        console.log("data: ", data)
         setRowData(data)
       })
       .catch((error) => console.error("Failed to load data", error))
