@@ -1,5 +1,8 @@
-import { evaluate } from "mathjs"
+import { evaluate } from "mathjs";
 
+/**
+ * 산식 계산 함수
+ */
 const EXCEL_JS_FUNCTION_MAP = {
   // JavaScript Math와 직접 매핑
   floor: "Math.floor",
@@ -15,17 +18,17 @@ const EXCEL_JS_FUNCTION_MAP = {
   CEILING: "Math.ceil",
   FLOOR: "Math.floor",
   ABS: "Math.abs",
-}
+};
 
 const extractKeywords = (equation) => {
   // 함수 이름과 인자 분리 (예: "round(x, 2)" → "round"과 "x, 2")
-  const functionRegex = /^([a-zA-Z]+)\((.+)\)$/
-  const match = equation.match(functionRegex)
+  const functionRegex = /^([a-zA-Z]+)\((.+)\)$/;
+  const match = equation.match(functionRegex);
 
-  if (!match) return []
+  if (!match) return [];
 
-  const funcName = match[1] // "floor", "round" 등
-  const innerExpression = match[2] // "bk_price + m_supply_total_price - pre_payment - balance"
+  const funcName = match[1]; // "floor", "round" 등
+  const innerExpression = match[2]; // "bk_price + m_supply_total_price - pre_payment - balance"
 
   // 연산자와 숫자(인자) 제외하고 변수 이름만 추출
   const parts = innerExpression
@@ -36,23 +39,25 @@ const extractKeywords = (equation) => {
         part.length > 0 && // 빈 문자열 제외
         !/^\d+$/.test(part) && // 숫자 제외
         !Object.keys(EXCEL_JS_FUNCTION_MAP).includes(part) // 함수 이름 제외
-    )
+    );
 
-  return parts
-}
+  return parts;
+};
 
 const calculateEquation = (equation, data) => {
-  console.log("equation: ", equation)
-  const keywords = extractKeywords(equation)
-  const newData = {}
+  console.log("equation: ", equation);
+  const keywords = extractKeywords(equation);
+  const newData = {};
   keywords.forEach((key) => {
-    newData[key] = data[key] ?? 0 // null/undefined 처리
-  })
-  console.log("newData: ", newData)
+    newData[key] = data[key] ?? 0; // null/undefined 처리
+  });
+  console.log("newData: ", newData);
   try {
-    return evaluate(equation, newData)
+    return evaluate(equation, newData);
   } catch (error) {
-    console.error("Evaluation error:", error)
-    return 0
+    console.error("Evaluation error:", error);
+    return 0;
   }
-}
+};
+
+export const setFirstColum = () => {};

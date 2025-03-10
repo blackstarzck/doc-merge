@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 import { OVERVIEW_TABLES } from "../../constants/menu";
+import { DEFAULT_FORMAT_ITEMS } from "../../constants/options";
 import { useDocumentId } from "../../hooks/useDocumentId";
 import { selectNameById } from "../../store/organizationNames/organizationNamesSlice";
 
@@ -42,6 +43,11 @@ const ActionHandler = ({
   const [fileName, setFileName] = useState("");
   const org = useSelector((state) => selectNameById(state, organizationId));
 
+  // Selected Format: Type-A
+  const selectedFormat = DEFAULT_FORMAT_ITEMS.find(
+    (item) => item.key === "typeA"
+  );
+
   useEffect(() => {
     const parentName = documentId
       ? OVERVIEW_TABLES.find((table) => table.key === documentId).label
@@ -60,39 +66,49 @@ const ActionHandler = ({
   }, [columns]);
 
   const downloadExcel = async () => {
+    const {
+      all,
+      first_columns_repeat,
+      second_columns_repeat,
+      first_rows_repeat,
+      second_rows_repeat,
+      last_column,
+      first_column,
+      header_row,
+      footer_row,
+    } = selectedFormat.elements;
+
+    console.log("Elements: ", selectedFormat.elements);
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(`${fileName}`);
-    worksheet.properties.defaultRowHeight = 24;
+
+    console.log("columns: ", columns);
 
     // ✅ 컬럼 설정
-    worksheet.columns = columns.map((col) => ({
-      header: col.headerName,
-      key: col.field,
-      width: col.cellDataType === "date" ? 20 : 15,
-    }));
+    worksheet.columns = columns.map((col) => {
+      const parts = col.field.split("_");
+      const isAmoutField =
+        parts[parts.length - 1] === "cost" ||
+        parts[parts.length - 1] === "price";
+      const isRateField = parts[parts.length - 1] === "rate";
+
+      return {
+        header: col.headerName,
+        key: col.field,
+        width: col.cellDataType === "date" ? 20 : 15,
+        style: isAmoutField ? { numFmt: "#,##0" } : undefined,
+      };
+    });
 
     // ✅ 데이터 추가
-    rowData.forEach((row) => {
+    rowData.forEach((row, index) => {
       for (const key in row) {
         row[key] = row[key] === null ? "" : row[key];
       }
       worksheet.addRow(row);
-    });
-
-    // ✅ 헤더 스타일 적용
-    // worksheet.getRow(1).height = 30
-    worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "000000" } }; // 흰색 글씨
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "BFBFBF" }, // 배경색
-      };
-    });
-
-    // ✅ 데이터 셀 스타일 적용 (테두리 추가)
-    worksheet.eachRow((row, rowNumber) => {
-      row.eachCell((cell) => {
+      const addedRow = worksheet.getRow(index + 2);
+      addedRow.eachCell((cell) => {
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -102,6 +118,110 @@ const ActionHandler = ({
         cell.alignment = { horizontal: "center", vertical: "middle" };
       });
     });
+
+    const mapper = {};
+
+    for (const key in selectedFormat.elements) {
+      const item = selectedFormat.elements[key];
+
+      if (item) {
+        mapper[key] = {
+          styles: {
+            backgroundColor: item.styles.backgroundColor,
+            color: item.styles.color,
+          },
+          cells: [],
+        };
+        console.log(JSON.parse(item.styles.textDecorationLine));
+        const temp1 = JSON.parse(item.styles.fontSize);
+        for (const k in temp1) {
+          mapper[key].styles[k] = temp1[k];
+        }
+        const temp2 = JSON.parse(item.styles.fontStyle);
+        for (const k in temp2) {
+          mapper[key].styles[k] = temp2[k];
+        }
+        const temp3 = JSON.parse(item.styles.textDecorationLine);
+        for (const k in temp3) {
+          mapper[key].styles[k] = temp3[k];
+        }
+      }
+    }
+
+    worksheet.columns.forEach((item, index) => {
+      const number = index + 1;
+      const col = worksheet.getColumn(number);
+
+      // column repeat style
+      if (first_columns_repeat && number % 2 === 0) {
+        col.eachCell({ includeEmpty: true }, (cell) =>
+          mapper.first_column_repeat.cells.push(cell)
+        );
+      } else if (second_columns_repeat && number % 2 === 1) {
+        col.eachCell({ includeEmpty: true }, (cell) =>
+          mapper.second_columns_repeat.cells.push(cell)
+        );
+      }
+
+      // column first & second style
+      if (first_column && number === 1) {
+        col.eachCell({ includeEmpty: true }, (cell) =>
+          mapper.first_column.cells.push(cell)
+        );
+      } else if (last_column && number === worksheet.columns.length) {
+        col.eachCell({ includeEmpty: true }, (cell) =>
+          mapper.last_column.cells.push(cell)
+        );
+      }
+
+      col.eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+        const row = worksheet.getRow(rowNumber);
+        row.height = 22;
+        // row repeat style
+        if (first_rows_repeat && rowNumber % 2 === 0) {
+          mapper.first_rows_repeat.cells.push(cell);
+        } else if (second_rows_repeat && rowNumber % 2 === 1) {
+          mapper.second_rows_repeat.cells.push(cell);
+        }
+
+        // row first & last style
+        if (header_row && rowNumber === 1) {
+          mapper.header_row.cells.push(cell);
+        } else if (footer_row && rowNumber === worksheet.rowCount) {
+          mapper.footer_row.cells.push(cell);
+        }
+      });
+    });
+
+    console.log("mapper: ", mapper);
+
+    for (const element in mapper) {
+      const cells = mapper[element].cells;
+      const styles = mapper[element].styles;
+
+      cells.forEach((cell) => {
+        cell.font = {
+          color: { argb: styles.color.replace("#", "") },
+          size: styles.fontSize.replace("px", ""),
+          bold: styles.fontWeight === "bold",
+          italic: styles.fontStyle === "italic",
+          underline: styles.textDecorationLine === "underline",
+          strike: styles.textDecorationLine === "line-through",
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: styles.backgroundColor.replace("#", "") },
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+    }
 
     // ✅ 첫 번째 행 고정 (Freeze)
     const keyCount = columns.length;
