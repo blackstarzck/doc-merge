@@ -51,7 +51,7 @@ const ActionHandler = ({
   useEffect(() => {
     const parentName = documentId
       ? OVERVIEW_TABLES.find((table) => table.key === documentId).label
-      : org.name
+      : org?.name
     const childName = ""
     setFileName(`${parentName}${childName ? `_${childName}` : ""}`)
   }),

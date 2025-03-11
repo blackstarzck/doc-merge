@@ -49,6 +49,8 @@ const UploadZone = () => {
           { headers: { "Content-Type": "multipart/form-data" } }
         )
 
+        console.log("response: ", response)
+
         messageApi.open({ type: "success", content: "파일 업로드 성공!" })
         onSuccess(response.data) // UI 업데이트
 
@@ -56,8 +58,8 @@ const UploadZone = () => {
           getDocument({
             path: documentId || "organizations",
             documentId: organizationId || "",
-          }).unwrap()
-        )
+          })
+        ).unwrap()
       } catch (error) {
         console.log("error: ", error)
         messageApi.open({ type: "error", content: "파일 업로드 실패." })
