@@ -33,7 +33,7 @@ export const deleteDocument = createAsyncThunk(
   async (payload) => {
     const { path, documentId, ids } = payload
     console.log("delete payload: ", payload)
-    return await deleteApi[path](ids)
+    return await deleteApi[path]({documentId, ids})
   }
 )
 

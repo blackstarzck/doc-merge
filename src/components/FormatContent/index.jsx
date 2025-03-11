@@ -1,4 +1,3 @@
-import { CheckCircleTwoTone } from "@ant-design/icons"
 import {
   Button,
   Col,
@@ -13,7 +12,7 @@ import {
 } from "antd"
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import styled, { css } from "styled-components"
+import styled from "styled-components"
 
 import {
   FONT_SIZE_OPTIONS,
@@ -21,44 +20,14 @@ import {
   TABLE_ELEMENTS,
   UNDERLINE_OPTIONS,
 } from "../../constants/options"
-import { setFormat } from "../../store/format/formatSlice"
-import {
-  selectFormatItemByKey,
-  updateFormatItem,
-} from "../../store/formatItems/formatItemsSlice"
+import { updateFormatItem } from "../../store/formatItems/formatItemsSlice"
 import { updateContents } from "../../store/modals/modalsSlice"
 import Preview from "../Preview"
+import ElementItem from "./ElementItem/ElementItem"
 
 const { Item } = Form
 
-const MenuItem = ({ hasStyles, children }) => {
-  const {
-    token: { colorPrimary },
-  } = theme.useToken()
-  return (
-    <Wrap $hasStyles={hasStyles} $colorPrimary={colorPrimary}>
-      <span>{children}</span>
-      {hasStyles && <CheckCircleTwoTone twoToneColor={colorPrimary} />}
-    </Wrap>
-  )
-}
-
-const Wrap = styled.div`
-  display: flex;
-  justify-content: space-between;
-
-  & > span {
-    ${({ $hasStyles, $colorPrimary }) => {
-      if ($hasStyles) {
-        return css`
-          color: ${$colorPrimary};
-        `
-      }
-    }};
-  }
-`
-
-const defaultStyles = {
+const DEFAULT_STYLES = {
   fontSize: FONT_SIZE_OPTIONS[5].value,
   fontStyle: FONT_STYLE_OPTIONS[0].value,
   textDecorationLine: UNDERLINE_OPTIONS[0].value,
@@ -67,16 +36,28 @@ const defaultStyles = {
   backgroundColor: "#ffffff",
 }
 
+const DEFAULT_ELEMENTS = {
+  all: null,
+  first_columns_repeat: null,
+  second_columns_repeat: null,
+  first_rows_repeat: null,
+  second_rows_repeat: null,
+  last_column: null,
+  first_column: null,
+  header_row: null,
+  footer_row: null,
+}
+
 const FormatContent = ({ handleCancel, saveNewFormat }) => {
   const [form] = Form.useForm()
-  const [styles, setStyles] = useState(defaultStyles)
+  const [styles, setStyles] = useState(DEFAULT_STYLES)
   const selectedFormat = useSelector((state) => state.modals.modals.formatter)
-  const dispatch = useDispatch()
   const [elements, setElements] = useState([])
-  const [selectedKeys, setSelectedKeys] = useState(null) // 리스트 모두 styles 가 없을때 비활성화
+  const [selectedKey, setSelectedKey] = useState(null) // 리스트 모두 styles 가 없을때 비활성화
   const isVisible = useSelector(
     (state) => state.modals.modals.formatter.visible
   )
+  const dispatch = useDispatch()
   const {
     token: { colorBorder },
   } = theme.useToken()
@@ -95,8 +76,8 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
   }
 
   const initReset = useCallback(() => {
-    setStyles(defaultStyles)
-    setSelectedKeys(null)
+    setStyles(DEFAULT_STYLES)
+    setSelectedKey(null)
     // form.resetFields()
   }, [form])
 
@@ -113,6 +94,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
           styles: selectedFormat.elements[key]?.styles,
         })
       }
+      console.log("selectedElemenets: ", selectedElemenets)
       setElements(selectedElemenets)
     }
   }, [selectedFormat])
@@ -140,28 +122,26 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
           </Head>
           <MenuWrapper $colorBorder={colorBorder}>
             <Menu
-              selectedKeys={selectedKeys}
+              selectedKeys={selectedKey}
               onSelect={({ key }) => {
                 const find = elements.find((item) => item.key === key)
-                const styles = find.styles ? find.styles : defaultStyles
+                const styles = find.styles ? find.styles : DEFAULT_STYLES
 
                 console.log("find: ", find)
                 console.log("onSelect", key)
-                console.log("styles: ", find.styles || defaultStyles)
-                console.log("[1] form getFieldsValue: ", form.getFieldsValue())
+                console.log("styles: ", find.styles || DEFAULT_STYLES)
 
-                setSelectedKeys(key)
+                setSelectedKey(key)
                 setStyles(styles)
                 form.setFieldsValue(styles)
-                console.log("[2] form getFieldsValue: ", form.getFieldsValue())
               }}
               mode="inline"
               items={elements.map((item) => ({
                 key: item.key,
                 label: (
-                  <MenuItem hasStyles={item.styles ? true : false}>
+                  <ElementItem hasStyles={item.styles ? true : false}>
                     {item.label}
-                  </MenuItem>
+                  </ElementItem>
                 ),
               }))}
             />
@@ -182,7 +162,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
         {/* 위쪽 */}
         <ColWrapper span={12}>
           <Form
-            disabled={!selectedKeys}
+            disabled={!selectedKey}
             form={form}
             onValuesChange={handleValuesChange}
             layout="vertical"
@@ -234,42 +214,31 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
             <h4>미리 보기</h4>
             <div>
               <Button
-                disabled={!selectedKeys}
+                disabled={!selectedKey}
                 size="small"
                 color="default"
                 variant="text"
                 onClick={() => {
-                  const element = selectedFormat.elements[selectedKeys]
-                  const update = {
-                    ...selectedFormat,
-                    elements: {
-                      ...selectedFormat.elements,
-                      [selectedKeys]: { ...element, styles },
-                    },
-                  }
-                  dispatch(updateContents(update))
+                  const update = elements.map((item) =>
+                    item.key === selectedKey ? { ...item, styles } : item
+                  )
+                  setElements(update)
                 }}
               >
                 저장
               </Button>
               <Divider type="vertical" />
               <Button
-                disabled={!selectedKeys}
+                disabled={!selectedKey}
                 size="small"
                 color="default"
                 variant="text"
                 onClick={() => {
-                  const element = selectedFormat.elements[selectedKeys]
-                  setStyles(defaultStyles)
-                  dispatch(
-                    updateContents({
-                      ...selectedFormat,
-                      elements: {
-                        ...selectedFormat.elements,
-                        [selectedKeys]: { ...element, styles: null },
-                      },
-                    })
+                  const update = elements.map((item) =>
+                    item.key === selectedKey ? { ...item, styles: null } : item
                   )
+                  setElements(update)
+                  setStyles(DEFAULT_STYLES)
                 }}
               >
                 지우기
@@ -286,20 +255,19 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
           size="large"
           disabled={false}
           onClick={() => {
-            const element = selectedFormat.elements[selectedKeys]
+            const update = {
+              id: selectedFormat.key,
+              changes: {
+                elements: {},
+              },
+            }
+            elements.forEach((item) => {
+              update.changes.elements[item.key] = item.styles || null
+            })
+            console.log("update: ", update)
+            console.log("elements: ", update.changes.elements)
 
-            // dispatch(setFormat())
-            dispatch(
-              updateFormatItem({
-                id: selectedFormat.key,
-                changes: {
-                  elements: {
-                    ...selectedFormat.elements,
-                    [selectedKeys]: { ...element, styles },
-                  },
-                },
-              })
-            )
+            dispatch(updateFormatItem({ ...update }))
             initReset()
             handleCancel()
           }}
