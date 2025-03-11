@@ -85,7 +85,11 @@ const SelectWrapper = styled(Select)`
   .ant-select-selection-item {
     font-size: 14px;
     color: ${(props) =>
-      props.$isSelected ? props.$primary : "#ffffff"} !important;
+      props.$isSelected ? props.$primary : "rgba(255,255,255,0.65)"} !important;
+  }
+
+  & .ant-select-selector input {
+    color: rgba(255, 255, 255, 0.65) !important;
   }
 `
 
