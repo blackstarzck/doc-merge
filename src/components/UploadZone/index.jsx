@@ -47,19 +47,28 @@ const UploadZone = () => {
           }`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
-        )
+        ).then((res) => {
+          dispatch(
+            getDocument({
+              path: documentId || "organizations",
+              documentId: organizationId || "",
+            })
+          )
+          return res;
+        })
 
         console.log("response: ", response)
 
         messageApi.open({ type: "success", content: "파일 업로드 성공!" })
         onSuccess(response.data) // UI 업데이트
 
-        await dispatch(
+        dispatch(
           getDocument({
             path: documentId || "organizations",
             documentId: organizationId || "",
           })
         ).unwrap()
+
       } catch (error) {
         console.log("error: ", error)
         messageApi.open({ type: "error", content: "파일 업로드 실패." })

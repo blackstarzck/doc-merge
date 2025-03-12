@@ -5,9 +5,9 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL
 // 팩토리 함수
 const createDeleteApi = (endpoint) => {
   return ({documentId, ids}) => {
-    console.log("deleteApi: ", ids)
+    const url = documentId ? `/${endpoint}/${documentId}` : `/${endpoint}/delete`
     return axios
-      .post(`/${endpoint}${"/" + documentId}`, { ids: ids.join(",")})
+      .post(url, { ids })
       .then((res) => res.data)
       .catch((error) => {
         console.log("error log: ", error)

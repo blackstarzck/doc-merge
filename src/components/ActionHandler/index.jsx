@@ -42,11 +42,12 @@ const ActionHandler = ({
   const { documentId, organizationId } = useDocumentId()
   const [fileName, setFileName] = useState("")
   const org = useSelector((state) => selectNameById(state, organizationId))
+  const selectedFormat = useSelector((state) => state.format)
 
   // Selected Format: Type-A
-  const selectedFormat = DEFAULT_FORMAT_ITEMS.find(
-    (item) => item.key === "typeA"
-  )
+  // const selectedFormat = DEFAULT_FORMAT_ITEMS.find(
+  //   (item) => item.key === "typeA"
+  // )
 
   useEffect(() => {
     const parentName = documentId
@@ -58,11 +59,11 @@ const ActionHandler = ({
     [documentId, organizationId, org]
 
   useEffect(() => {
-    console.log("rowData: ", rowData)
+    // console.log("rowData: ", rowData)
   }, [rowData])
 
   useEffect(() => {
-    console.log("columns: ", columns)
+    // console.log("columns: ", columns)
   }, [columns])
 
   const downloadExcel = async () => {
@@ -78,12 +79,11 @@ const ActionHandler = ({
       footer_row,
     } = selectedFormat.elements
 
-    console.log("Elements: ", selectedFormat.elements)
+    console.log("selectedFormat: ", selectedFormat)
+    console.log("columns: ", columns)
 
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet(`${fileName}`)
-
-    console.log("columns: ", columns)
 
     // ✅ 컬럼 설정
     worksheet.columns = columns.map((col) => {
@@ -121,41 +121,52 @@ const ActionHandler = ({
 
     const mapper = {}
 
+    console.log("elements: ", selectedFormat.elements)
+
     for (const key in selectedFormat.elements) {
       const item = selectedFormat.elements[key]
+
+      console.log("item: ", item)
 
       if (item) {
         mapper[key] = {
           styles: {
-            backgroundColor: item.styles.backgroundColor,
-            color: item.styles.color,
+            backgroundColor: item.backgroundColor,
+            color: item.color,
           },
           cells: [],
         }
-        console.log(JSON.parse(item.styles.textDecorationLine))
-        const temp1 = JSON.parse(item.styles.fontSize)
+        const temp1 = JSON.parse(item.fontSize)
         for (const k in temp1) {
           mapper[key].styles[k] = temp1[k]
         }
-        const temp2 = JSON.parse(item.styles.fontStyle)
+        const temp2 = JSON.parse(item.fontStyle)
         for (const k in temp2) {
           mapper[key].styles[k] = temp2[k]
         }
-        const temp3 = JSON.parse(item.styles.textDecorationLine)
+        const temp3 = JSON.parse(item.textDecorationLine)
         for (const k in temp3) {
           mapper[key].styles[k] = temp3[k]
         }
       }
     }
 
+    console.log("mapper: ", mapper)
+
     worksheet.columns.forEach((item, index) => {
       const number = index + 1
       const col = worksheet.getColumn(number)
 
+      if(all){
+        col.eachCell({ includeEmpty: true }, (cell) =>
+          mapper.all.cells.push(cell)
+        )
+      }
+
       // column repeat style
       if (first_columns_repeat && number % 2 === 0) {
         col.eachCell({ includeEmpty: true }, (cell) =>
-          mapper.first_column_repeat.cells.push(cell)
+          mapper.first_columns_repeat.cells.push(cell)
         )
       } else if (second_columns_repeat && number % 2 === 1) {
         col.eachCell({ includeEmpty: true }, (cell) =>
@@ -221,6 +232,7 @@ const ActionHandler = ({
           right: { style: "thin" },
         }
       })
+      // if(element === "all") break;
     }
 
     // ✅ 첫 번째 행 고정 (Freeze)

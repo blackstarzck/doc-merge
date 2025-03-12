@@ -8,6 +8,7 @@ import { TABLE_ELEMENTS } from "../../constants/options"
 import { setFormat } from "../../store/format/formatSlice"
 import {
   addFormatItem,
+  FORMATTER_MODAL_NAME,
   removeFormatItem,
   selectAllFormatItems,
 } from "../../store/formatItems/formatItemsSlice"
@@ -57,7 +58,17 @@ const FormatHandler = () => {
         const item = {
           key: `custom-${newNumber}`,
           label: form.getFieldValue("customFormatName"),
-          elements: null,
+          elements: {
+            all: null,
+            first_columns_repeat: null,
+            second_columns_repeat: null,
+            first_rows_repeat: null,
+            second_rows_repeat: null,
+            last_column: null,
+            first_column: null,
+            header_row: null,
+            footer_row: null,
+          },
         }
         TABLE_ELEMENTS.forEach((element) => {
           item.elements = { ...item.elements, [element.key]: null }
@@ -92,10 +103,10 @@ const FormatHandler = () => {
 
     dispatch(
       updateContents({
-        modalName: "formatter",
+        visible: true,
+        modalName: FORMATTER_MODAL_NAME,
         key,
         label: find.label,
-        visible: true,
         elements: find.elements,
       })
     )
@@ -119,7 +130,23 @@ const FormatHandler = () => {
           style={{ width: 300 }}
           onSelect={(key) => {
             const find = formatItems.find((item) => item.key === key)
-            dispatch(setFormat(find))
+
+            console.log("find: ", find)
+
+            const filtered = Object.entries(find.elements)
+              .filter(([key, value]) => value)
+              .map(item => ({ [item[0]]: item[1] }))
+
+            console.log("filtered: ", filtered)
+
+            if(filtered.length > 0) dispatch(setFormat(find))
+            if(filtered.length === 0) dispatch(updateContents({
+              visible: true,
+              modalName: FORMATTER_MODAL_NAME,
+              key,
+              label: find.label,
+              elements: find.elements
+            }))
           }}
           onDropdownVisibleChange={() => {
             form.setFieldValue("customFormatName", "")

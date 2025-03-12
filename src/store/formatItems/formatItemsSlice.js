@@ -20,6 +20,8 @@ const initialState = formatAdapter.getInitialState(
     : DEFAULT_FORMAT_ITEMS
 )
 
+export const FORMATTER_MODAL_NAME = "formatter"
+
 export const formatItemsSlice = createSlice({
   name: "formatItems",
   initialState,

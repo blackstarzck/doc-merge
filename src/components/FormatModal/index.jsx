@@ -4,17 +4,15 @@ import Draggable from "react-draggable"
 import { useDispatch, useSelector } from "react-redux"
 import styled from "styled-components"
 
+import { FORMATTER_MODAL_NAME } from "../../store/formatItems/formatItemsSlice"
 import { updateContents } from "../../store/modals/modalsSlice"
 import FormatContent from "../FormatContent"
-
-const MODAL_NAME = "formatter"
 
 const FormatModal = () => {
   const isVisible = useSelector(
     (state) => state.modals.modals.formatter.visible
   )
   const dispatch = useDispatch()
-  const [newFormat, setNewFormat] = useState()
   const [disabled, setDisabled] = useState(true)
   const [bounds, setBounds] = useState({
     left: 0,
@@ -31,16 +29,9 @@ const FormatModal = () => {
     }
   }, [isVisible])
 
-  const saveNewFormat = (styles) => {
-    console.log("saveNewFormat: ", styles) // 모달에서 전달한 저장된 스타일값을 어디에 저장해야함
-    dispatch(
-      updateContents({ modalName: MODAL_NAME, key: null, visible: false })
-    )
-  }
-
   const handleCancel = () => {
     dispatch(
-      updateContents({ modalName: MODAL_NAME, key: null, visible: false })
+      updateContents({ modalName: FORMATTER_MODAL_NAME, key: null, visible: false })
     )
   }
 
@@ -105,7 +96,6 @@ const FormatModal = () => {
       >
         <FormatContent
           handleCancel={handleCancel}
-          saveNewFormat={saveNewFormat}
         />
       </ModalWrapper>
     </>

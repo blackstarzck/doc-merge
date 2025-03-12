@@ -5,22 +5,22 @@ export const TABLE_ELEMENTS = [
     isSelected: false,
   },
   {
-    key: "first_columns_repeat", // 0 % 2 나머지값 0 에 적용
-    label: "열 줄무늬",
+    key: "first_columns_repeat",
+    label: "첫 열 줄무늬",
     isSelected: false,
   },
   {
-    key: "second_columns_repeat", // 0 % 2 나머지값 1 에 적용
+    key: "second_columns_repeat",
     label: "둘째 열 줄무늬",
     isSelected: false,
   },
   {
-    key: "first_rows_repeat", // 0 % 2 나머지값 0 에 적용
+    key: "first_rows_repeat",
     label: "첫 행 줄무늬",
     isSelected: false,
   },
   {
-    key: "second_rows_repeat", // 0 % 2 나머지값 1 에 적용
+    key: "second_rows_repeat",
     label: "둘째 행 줄무늬",
     isSelected: false,
   },
@@ -86,6 +86,15 @@ export const UNDERLINE_OPTIONS = [
   },
 ]
 
+export const DEFAULT_STYLES = {
+  fontSize: FONT_SIZE_OPTIONS[5].value,
+  fontStyle: FONT_STYLE_OPTIONS[0].value,
+  textDecorationLine: UNDERLINE_OPTIONS[0].value,
+  textDecorationColor: "#000000",
+  color: "#000000",
+  backgroundColor: "#ffffff",
+}
+
 export const DEFAULT_FORMAT_ITEMS = [
   {
     label: "Type-A",
@@ -95,27 +104,23 @@ export const DEFAULT_FORMAT_ITEMS = [
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
-          fontSize: '{"fontSize": "11px"}',
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#EDEDED",
-        },
+        fontStyle: '{"fontStyle":"normal","fontWeight":"normal"}',
+        fontSize: '{"fontSize": "11px"}',
+        textDecorationLine:
+          '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+        color: "#000000",
+        backgroundColor: "#EDEDED",
       },
       second_rows_repeat: null,
       last_column: null,
       first_column: null,
       header_row: {
-        styles: {
-          fontStyle: '{"fontStyle":"normal","fontWeight":"bold"}',
-          fontSize: '{"fontSize": "11px"}',
-          textDecorationLine:
-            '{"textDecorationLine":"none","textDecorationStyle":"none"}',
-          color: "#000000",
-          backgroundColor: "#C3C3C3",
-        },
+        fontStyle: '{"fontStyle":"normal","fontWeight":"bold"}',
+        fontSize: '{"fontSize": "11px"}',
+        textDecorationLine:
+          '{"textDecorationLine":"none","textDecorationStyle":"none"}',
+        color: "#000000",
+        backgroundColor: "#C3C3C3",
       },
       footer_row: null,
     },
@@ -128,27 +133,23 @@ export const DEFAULT_FORMAT_ITEMS = [
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        styles: {
-          fontStyle: "normal",
-          fontWeight: "normal",
-          fontSize: 11,
-          textDecorationLine: "none",
-          color: "#000000",
-          backgroundColor: "#EDEDED",
-        },
+        fontStyle: "normal",
+        fontWeight: "normal",
+        fontSize: 11,
+        textDecorationLine: "none",
+        color: "#000000",
+        backgroundColor: "#EDEDED",
       },
       second_rows_repeat: null,
       last_column: null,
       first_column: null,
       header_row: {
-        styles: {
-          fontStyle: "normal",
-          fontWeight: "bold",
-          fontSize: 11,
-          textDecorationLine: "none",
-          color: "#000000",
-          backgroundColor: "#C3C3C3",
-        },
+        fontStyle: "normal",
+        fontWeight: "bold",
+        fontSize: 11,
+        textDecorationLine: "none",
+        color: "#000000",
+        backgroundColor: "#C3C3C3",
       },
       footer_row: null,
     },
@@ -161,27 +162,23 @@ export const DEFAULT_FORMAT_ITEMS = [
       first_columns_repeat: null,
       second_columns_repeat: null,
       first_rows_repeat: {
-        styles: {
-          fontStyle: "normal",
-          fontWeight: "normal",
-          fontSize: 11,
-          textDecorationLine: "none",
-          color: "#000000",
-          backgroundColor: "#EDEDED",
-        },
+        fontStyle: "normal",
+        fontWeight: "normal",
+        fontSize: 11,
+        textDecorationLine: "none",
+        color: "#000000",
+        backgroundColor: "#EDEDED",
       },
       second_rows_repeat: null,
       last_column: null,
       first_column: null,
       header_row: {
-        styles: {
-          fontStyle: "normal",
-          fontWeight: "bold",
-          fontSize: 11,
-          textDecorationLine: "none",
-          color: "#000000",
-          backgroundColor: "#C3C3C3",
-        },
+        fontStyle: "normal",
+        fontWeight: "bold",
+        fontSize: 11,
+        textDecorationLine: "none",
+        color: "#000000",
+        backgroundColor: "#C3C3C3",
       },
       footer_row: null,
     },

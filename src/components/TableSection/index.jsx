@@ -1,7 +1,8 @@
+import { themeQuartz } from "ag-grid-community"
 import { AgGridReact } from "ag-grid-react"
 import { Button, message } from "antd"
 import { DateTime } from "luxon"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import styled from "styled-components"
 
@@ -15,6 +16,14 @@ import {
 } from "../../store/document/documentSlice"
 import { selectNameById } from "../../store/organizationNames/organizationNamesSlice"
 import ActionHandler from "../ActionHandler"
+
+const myTheme = themeQuartz.withParams({
+  borderColor: "#d5d5eb",
+  wrapperBorder: false,
+  headerRowBorder: false,
+  rowBorder: { style: "solid", width: 1 },
+  columnBorder: { style: "solid" },
+});
 
 const numberFormatter = (value) =>
   value ? value.toLocaleString("en-US") : null
@@ -47,6 +56,17 @@ const TableSection = () => {
     organizationId ? selectNameById(state, organizationId) : null
   )
   const count = useRef(0)
+  const theme = useMemo(() => {
+    return myTheme;
+  }, []);
+
+  const defaultColDef = useMemo(() => (
+    {
+      editable: true,
+      enableCellChangeFlash: true,
+      filter: true,
+    }
+  ), []);
 
   useEffect(() => {
     setColumnDefs(
@@ -259,6 +279,7 @@ const TableSection = () => {
   return (
     <Wrapper>
       <AgGridReact
+      theme={theme}
         loading={getLoading || postLoading || deleteLoading}
         getRowId={getRowId}
         ref={gridRef}
@@ -267,11 +288,7 @@ const TableSection = () => {
         rowSelection={{
           mode: "multiRow",
         }}
-        defaultColDef={{
-          editable: true,
-          enableCellChangeFlash: true,
-          filter: true,
-        }}
+        defaultColDef={defaultColDef}
         resetRowDataOnUpdate={true}
         animateRows={true}
         onCellValueChanged={onCellValueChanged}

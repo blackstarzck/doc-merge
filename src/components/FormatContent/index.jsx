@@ -1,54 +1,22 @@
-import {
-  Button,
-  Col,
-  ColorPicker,
-  Divider,
-  Flex,
-  Form,
-  Menu,
-  Row,
-  Select,
-  theme,
-} from "antd"
+import { Button, Col, ColorPicker, Divider, Flex, Form, Menu, Row, Select, theme } from "antd"
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import styled from "styled-components"
 
 import {
+  DEFAULT_STYLES,
   FONT_SIZE_OPTIONS,
   FONT_STYLE_OPTIONS,
   TABLE_ELEMENTS,
   UNDERLINE_OPTIONS,
 } from "../../constants/options"
+import { setFormat } from "../../store/format/formatSlice"
 import { updateFormatItem } from "../../store/formatItems/formatItemsSlice"
-import { updateContents } from "../../store/modals/modalsSlice"
 import Preview from "../Preview"
 import ElementItem from "./ElementItem/ElementItem"
 
-const { Item } = Form
 
-const DEFAULT_STYLES = {
-  fontSize: FONT_SIZE_OPTIONS[5].value,
-  fontStyle: FONT_STYLE_OPTIONS[0].value,
-  textDecorationLine: UNDERLINE_OPTIONS[0].value,
-  textDecorationColor: "#000000",
-  color: "#000000",
-  backgroundColor: "#ffffff",
-}
-
-const DEFAULT_ELEMENTS = {
-  all: null,
-  first_columns_repeat: null,
-  second_columns_repeat: null,
-  first_rows_repeat: null,
-  second_rows_repeat: null,
-  last_column: null,
-  first_column: null,
-  header_row: null,
-  footer_row: null,
-}
-
-const FormatContent = ({ handleCancel, saveNewFormat }) => {
+const FormatContent = ({ handleCancel }) => {
   const [form] = Form.useForm()
   const [styles, setStyles] = useState(DEFAULT_STYLES)
   const selectedFormat = useSelector((state) => state.modals.modals.formatter)
@@ -91,7 +59,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
         selectedElemenets.push({
           key,
           label: TABLE_ELEMENTS.find((item) => item.key === key).label,
-          styles: selectedFormat.elements[key]?.styles,
+          styles: selectedFormat.elements[key],
         })
       }
       console.log("selectedElemenets: ", selectedElemenets)
@@ -125,11 +93,10 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
               selectedKeys={selectedKey}
               onSelect={({ key }) => {
                 const find = elements.find((item) => item.key === key)
-                const styles = find.styles ? find.styles : DEFAULT_STYLES
 
-                console.log("find: ", find)
-                console.log("onSelect", key)
-                console.log("styles: ", find.styles || DEFAULT_STYLES)
+                console.log("find: ", find, key)
+
+                const styles = find.styles ? find.styles : DEFAULT_STYLES
 
                 setSelectedKey(key)
                 setStyles(styles)
@@ -153,7 +120,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
             <h4>미리 보기</h4>
           </Head>
           {/* [1] 미리보기 */}
-          <Preview type="grid" settings={null} />
+          <Preview type="grid" elements={elements} />
         </ColWrapper>
       </Row>
       <Divider />
@@ -267,6 +234,7 @@ const FormatContent = ({ handleCancel, saveNewFormat }) => {
             console.log("update: ", update)
             console.log("elements: ", update.changes.elements)
 
+            dispatch(setFormat({ ...selectedFormat, elements: update.changes.elements }))
             dispatch(updateFormatItem({ ...update }))
             initReset()
             handleCancel()
@@ -316,7 +284,7 @@ const ColWrapper = styled(Col)`
   flex-direction: column;
 `
 
-const ItemWrapper = styled(Item)`
+const ItemWrapper = styled(Form.Item)`
   margin-bottom: 0;
   overflow: hidden;
 

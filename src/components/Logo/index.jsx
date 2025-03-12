@@ -10,6 +10,7 @@ const Logo = () => {
 
 const LogoWrapper = styled.div`
   font-size: 18px;
+  font-weight: 900;
   color: #ffffff;
   padding: 32px 16px;
 

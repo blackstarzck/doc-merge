@@ -6,7 +6,7 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL
 const createGetApi = (endpoint) => {
   return (id) => {
     return axios
-      .get(`/${endpoint}${"/" + id}`)
+      .get(`/${endpoint}${id && ("/" + id)}`)
       .then((res) => res.data)
       .catch((error) => {
         throw new Error("GET-ERROR. 콘솔로그를 확인해주세요.")

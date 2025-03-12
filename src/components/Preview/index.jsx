@@ -5,7 +5,7 @@ import { flattenObject } from "../../utils";
 import Grid from "./Grid";
 import Text from "./Text";
 
-const Preview = ({ settings, type, styles }) => {
+const Preview = ({ elements, type, styles }) => {
   const flattened = flattenObject(styles);
 
   const {
@@ -15,7 +15,7 @@ const Preview = ({ settings, type, styles }) => {
   return (
     <Wrapper $colorBorder={colorBorder}>
       {type === "grid" ? (
-        <Grid settings={settings} styles={flattened} />
+        <Grid elements={elements} styles={flattened} />
       ) : (
         <Text styles={flattened}>맑은 고딕</Text>
       )}
