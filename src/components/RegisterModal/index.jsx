@@ -32,7 +32,7 @@ const RegisterModal = ({ title, formKey, isModalOpen, setModalOpen }) => {
     <ModalWrapper
       centered
       open={isModalOpen}
-      title={`+${title} 신규등록`}
+      title={`거래처 신규등록`}
       onCancel={() => setModalOpen(false)}
       footer={() => (
         <Button type="primary" size="large" onClick={() => onsubmit()}>
