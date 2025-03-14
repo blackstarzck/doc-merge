@@ -1,41 +1,35 @@
-import {
-  createAsyncThunk,
-  createEntityAdapter,
-  createSlice,
-} from "@reduxjs/toolkit"
+import { createAsyncThunk, createEntityAdapter, createSlice } from '@reduxjs/toolkit'
+import axios from 'axios'
 
-import { deleteApi, getApi, postApi } from "../../api"
+import { deleteApi, getApi, postApi } from '../../api'
 
 // Thunks
-export const getDocument = createAsyncThunk("document/get", async (payload) => {
-  const { path, documentId } = payload
-  return await getApi[path](documentId)
+export const getDocument = createAsyncThunk('document/get', async (path) => {
+  console.log('path: ', path)
+  return await axios
+    .get(path)
+    .then((res) => res.data)
+    .catch((error) => {
+      throw new Error('GET-ERROR. 콘솔로그를 확인해주세요.')
+    })
 })
 
-export const postDocument = createAsyncThunk(
-  "document/update",
-  async (payload, { rejectWithValue }) => {
-    const { path, documentId, document } = payload
-    try {
-      const res = await postApi[path]({ documentId, document })
-      console.log("from slice post: ", res)
-      return res // { data: [...] } 가정
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to update"
-      )
-    }
+export const postDocument = createAsyncThunk('document/update', async (payload, { rejectWithValue }) => {
+  const { path, documentId, document } = payload
+  try {
+    const res = await postApi[path]({ documentId, document })
+    console.log('from slice post: ', res)
+    return res
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update')
   }
-)
+})
 
-export const deleteDocument = createAsyncThunk(
-  "document/delete",
-  async (payload) => {
-    const { path, documentId, ids } = payload
-    console.log("delete payload: ", payload)
-    return await deleteApi[path]({documentId, ids})
-  }
-)
+export const deleteDocument = createAsyncThunk('document/delete', async (payload) => {
+  const { path, documentId, ids } = payload
+  console.log('delete payload: ', payload)
+  return await deleteApi[path]({ documentId, ids })
+})
 
 // Adapter
 const documentAdapter = createEntityAdapter({
@@ -51,7 +45,7 @@ const initialState = documentAdapter.getInitialState({
 
 // Slice
 export const documentSlice = createSlice({
-  name: "document",
+  name: 'document',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -67,7 +61,7 @@ export const documentSlice = createSlice({
       })
       .addCase(getDocument.rejected, (state, action) => {
         state.get.loading = false
-        state.get.error = action.payload ?? "Failed to get document"
+        state.get.error = action.payload ?? 'Failed to get document'
       })
 
     // POST
@@ -77,13 +71,13 @@ export const documentSlice = createSlice({
         state.post.error = null
       })
       .addCase(postDocument.fulfilled, (state, action) => {
-        console.log("fulfilled payload.data:", action.payload)
+        console.log('fulfilled payload.data:', action.payload)
         state.post.loading = false
         documentAdapter.upsertMany(state, action.payload) // 배열로 추가/업데이트
       })
       .addCase(postDocument.rejected, (state, action) => {
         state.post.loading = false
-        state.post.error = action.payload ?? "Failed to update document"
+        state.post.error = action.payload ?? 'Failed to update document'
       })
 
     // DELETE
@@ -98,7 +92,7 @@ export const documentSlice = createSlice({
       })
       .addCase(deleteDocument.rejected, (state, action) => {
         state.delete.loading = false
-        state.delete.error = action.payload ?? "Failed to update document"
+        state.delete.error = action.payload ?? 'Failed to update document'
       })
   },
 })

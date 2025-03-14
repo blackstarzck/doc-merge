@@ -1,36 +1,37 @@
-import { UploadOutlined } from "@ant-design/icons"
-import { message, Upload } from "antd"
-import axios from "axios"
-import { useDispatch, useSelector } from "react-redux"
-import styled from "styled-components"
+import { UploadOutlined } from '@ant-design/icons'
+import { message, Upload } from 'antd'
+import axios from 'axios'
+import { useDispatch, useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { useDocumentId } from "../../hooks/useDocumentId"
-import { getDocument } from "../../store/document/documentSlice"
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import { getDocument } from '../../store/document/documentSlice'
 
 const { Dragger } = Upload
 
 const UploadZone = () => {
-  const { documentId, organizationId } = useDocumentId()
+  const { documentId, organizationId } = useIdsFromParams()
+  const location = useLocation()
   const [messageApi, contextHolder] = message.useMessage()
   const { loading, error } = useSelector((state) => state.document.post)
   const dispatch = useDispatch()
   const props = {
-    name: "file",
+    name: 'file',
     multiple: false,
-    accept: ".xlsx, .xls",
+    accept: '.xlsx, .xls',
     showUploadList: true,
     beforeUpload: (file) => {
       const isExcel =
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-        file.type === "application/vnd.ms-excel" ||
-        file.name.endsWith(".xlsx") ||
-        file.name.endsWith(".xls")
+        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.type === 'application/vnd.ms-excel' ||
+        file.name.endsWith('.xlsx') ||
+        file.name.endsWith('.xls')
 
       if (!isExcel) {
         messageApi.open({
-          type: "error",
-          content: "엑셀 파일만 업로드할 수 있습니다.",
+          type: 'error',
+          content: '엑셀 파일만 업로드할 수 있습니다.',
         })
         return false
       }
@@ -39,39 +40,22 @@ const UploadZone = () => {
     },
     customRequest: async ({ file, onSuccess, onError }) => {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append('file', file)
       try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/upload/${
-            documentId || organizationId
-          }`,
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        ).then((res) => {
-          dispatch(
-            getDocument({
-              path: documentId || "organizations",
-              documentId: organizationId || "",
-            })
-          )
-          return res;
-        })
-
-        console.log("response: ", response)
-
-        messageApi.open({ type: "success", content: "파일 업로드 성공!" })
-        onSuccess(response.data) // UI 업데이트
-
-        dispatch(
-          getDocument({
-            path: documentId || "organizations",
-            documentId: organizationId || "",
+        const response = await axios
+          .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+          .then((res) => {
+            dispatch(getDocument(location.pathname))
+            return res
           })
-        ).unwrap()
 
+        console.log('response: ', response)
+
+        messageApi.open({ type: 'success', content: '파일 업로드 성공!' })
+        onSuccess(response.data) // UI 업데이트
       } catch (error) {
-        console.log("error: ", error)
-        messageApi.open({ type: "error", content: "파일 업로드 실패." })
+        console.log('error: ', error)
+        messageApi.open({ type: 'error', content: '파일 업로드 실패.' })
         onError(error) // UI 업데이트
       }
     },

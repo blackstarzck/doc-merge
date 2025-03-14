@@ -1,27 +1,24 @@
-import { Divider, Select, theme } from "antd"
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import styled from "styled-components"
+import { Divider, Select, theme } from 'antd'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import styled from 'styled-components'
 
-import { useDocumentId } from "../../hooks/useDocumentId"
-import {
-  getOrgNames,
-  selectAllNames,
-} from "../../store/organizationNames/organizationNamesSlice"
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import { getAllOrganizationInfo, selectAllOrganizationInfo } from '../../store/organizationInfo/organizationInfoSlice'
 
 const defaultVal = 0
 
-const SiderSelectSection = ({ handleDocumentId }) => {
-  const { documentId, organizationId } = useDocumentId()
+const SiderSelectSection = ({ onClickSideMenu }) => {
+  const { documentId, organizationId } = useIdsFromParams()
   const [isSelected, setIsSelected] = useState(false)
-  const names = useSelector(selectAllNames)
+  const names = useSelector(selectAllOrganizationInfo)
   const dispatch = useDispatch()
   const {
     token: { colorPrimary },
   } = theme.useToken()
 
   useEffect(() => {
-    dispatch(getOrgNames())
+    dispatch(getAllOrganizationInfo())
   }, [])
 
   useEffect(() => {
@@ -34,7 +31,7 @@ const SiderSelectSection = ({ handleDocumentId }) => {
 
   return (
     <Wrapper>
-      <Divider style={{ borderColor: "rgba(255, 255, 255, .3)" }} />
+      <Divider style={{ borderColor: 'rgba(255, 255, 255, .3)' }} />
       <SelectWrapper
         showSearch
         size="large"
@@ -42,9 +39,9 @@ const SiderSelectSection = ({ handleDocumentId }) => {
         $isSelected={isSelected}
         $primary={colorPrimary}
         optionFilterProp="label"
-        onChange={(value) => handleDocumentId(value)}
+        onChange={(value) => onClickSideMenu(value)}
         options={[
-          { value: defaultVal, label: "문서를 선택해주세요", disabled: true },
+          { value: defaultVal, label: '문서를 선택해주세요', disabled: true },
           ...names.map((organization) => ({
             value: organization.id,
             label: organization.name,
@@ -66,10 +63,7 @@ const SelectWrapper = styled(Select)`
 
   & .ant-select-selector {
     background-color: rgba(255, 255, 255, 0.1) !important;
-    border-color: ${(props) =>
-      props.$isSelected
-        ? props.$primary
-        : "rgba(255, 255, 255, 0.1)"} !important;
+    border-color: ${(props) => (props.$isSelected ? props.$primary : 'rgba(255, 255, 255, 0.1)')} !important;
 
     & .ant-select-selection-placeholder {
       color: rgba(255, 255, 255, 0.65) !important;
@@ -84,8 +78,7 @@ const SelectWrapper = styled(Select)`
   & .ant-select-arrow,
   .ant-select-selection-item {
     font-size: 14px;
-    color: ${(props) =>
-      props.$isSelected ? props.$primary : "rgba(255,255,255,0.65)"} !important;
+    color: ${(props) => (props.$isSelected ? props.$primary : 'rgba(255,255,255,0.65)')} !important;
   }
 
   & .ant-select-selector input {

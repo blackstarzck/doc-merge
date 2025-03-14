@@ -1,42 +1,34 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons"
-import { Button, Layout, Menu, theme } from "antd"
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { Button, Layout, Menu, theme } from 'antd'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { OVERVIEW_TABLES } from "../../constants/menu"
-import { useDocumentId } from "../../hooks/useDocumentId"
-import Logo from "../Logo"
-import SiderSelectSection from "../SiderSelectSection"
-import UploadZone from "../UploadZone"
+import { OVERVIEW_TABLES } from '../../constants/menu'
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import Logo from '../Logo'
+import SiderSelectSection from '../SiderSelectSection'
+import UploadZone from '../UploadZone'
 
 const { Header, Sider, Content } = Layout
 
 const MainLayout = ({ children }) => {
-  const { documentId, organizationId } = useDocumentId()
+  const { documentId } = useIdsFromParams()
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken()
 
-  const handleDocumentId = (key) => {
+  const onClickSideMenu = (key) => {
     const match = OVERVIEW_TABLES.find((table) => table.key === key)
-    const path = match ? match.key : `organization/${key}`
+    const path = match ? `/overview/${match.key}` : `/organization/${key}`
 
-    console.log("path: ", path)
-
-    navigate(`/${path}`)
+    navigate(path)
   }
 
   return (
-    <Layout style={{ height: "100vh" }}>
-      <Sider
-        theme="dark"
-        width={250}
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-      >
+    <Layout style={{ height: '100vh' }}>
+      <Sider theme="dark" width={250} trigger={null} collapsible collapsed={collapsed}>
         <Logo />
         <Menu
           theme="dark"
@@ -46,10 +38,10 @@ const MainLayout = ({ children }) => {
             label: table.label,
             key: table.key,
           }))}
-          onSelect={({ key }) => handleDocumentId(key)}
+          onSelect={({ key }) => onClickSideMenu(key)}
           style={{ paddingTop: 46 }}
         />
-        <SiderSelectSection handleDocumentId={handleDocumentId} />
+        <SiderSelectSection onClickSideMenu={onClickSideMenu} />
         <UploadZone />
       </Sider>
       <Layout>
@@ -57,9 +49,9 @@ const MainLayout = ({ children }) => {
           style={{
             padding: 0,
             background: colorBgContainer,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <Button
@@ -67,7 +59,7 @@ const MainLayout = ({ children }) => {
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
             style={{
-              fontSize: "16px",
+              fontSize: '16px',
               width: 64,
               height: 64,
             }}
@@ -75,7 +67,7 @@ const MainLayout = ({ children }) => {
         </Header>
         <Content
           style={{
-            margin: "24px 16px",
+            margin: '24px 16px',
             padding: 24,
             minHeight: 280,
             background: colorBgContainer,

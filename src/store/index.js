@@ -1,21 +1,25 @@
-import { configureStore } from "@reduxjs/toolkit"
+import { configureStore } from '@reduxjs/toolkit'
 
-import documentSliceReducer from "./document/documentSlice"
-import formatSliceReducer from "./format/formatSlice"
-import formatItemsReducer from "./formatItems/formatItemsSlice"
-import thunk from "./middleware/thunk"
-import modalsSliceReducer from "./modals/modalsSlice"
-import orgNamesSliceReducer from "./organizationNames/organizationNamesSlice"
-import selectedRowSliceReducer from "./selectedRows/selectedRowIdSlice"
+import clientInfoReducer from './clientInfo/clientInfoSlice'
+import documentReducer from './document/documentSlice'
+import formatReducer from './format/formatSlice'
+import formatItemsReducer from './formatItems/formatItemsSlice'
+import thunk from './middleware/thunk'
+import modalsReducer from './modals/modalsSlice'
+import organizationInfoReducer from './organizationInfo/organizationInfoSlice'
+import selectedRowReducer from './selectedRows/selectedRowIdSlice'
+import vendorInfoReducer from './vendorInfo/vendorInfoSlice'
 
 export default configureStore({
   reducer: {
-    document: documentSliceReducer,
-    selectedRows: selectedRowSliceReducer,
-    orgnames: orgNamesSliceReducer,
-    modals: modalsSliceReducer,
+    document: documentReducer,
+    selectedRows: selectedRowReducer,
+    organizationInfo: organizationInfoReducer,
+    vendorInfo: vendorInfoReducer,
+    clientInfo: clientInfoReducer,
+    modals: modalsReducer,
     formatItems: formatItemsReducer,
-    format: formatSliceReducer,
+    format: formatReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
 })
