@@ -1,14 +1,13 @@
-import { EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Dropdown, Form, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd'
+import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
+import { Button, ConfigProvider, Dropdown, Flex, Form, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd'
 import { theme } from 'antd'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 
-import { FORM_FILEDS } from '../../constants/menu'
-import { getAllClientInfo } from '../../store/clientInfo/clientInfoSlice'
-import { getAllVendorInfo } from '../../store/vendorInfo/vendorInfoSlice'
+import { getAllClientInfo, selectAllClientInfo } from '../../store/clientInfo/clientInfoSlice'
+import { getAllVendorInfo, selectAllVendorInfo } from '../../store/vendorInfo/vendorInfoSlice'
 import RegisterModal from '../RegisterModal'
 
 const { useToken } = theme
@@ -19,7 +18,7 @@ const mapper = {
   mark_info: { en: 'mark_info', kr: '마크장비 진행현황' },
 }
 
-const SelectField = ({ name, onChange, onSearch }) => {
+const SelectField = ({ table, onChange, onSearch }) => {
   const { token } = useToken()
   const [messageApi, contextHolder] = message.useMessage()
   const props = useMemo(
@@ -43,7 +42,7 @@ const SelectField = ({ name, onChange, onSearch }) => {
         return true
       },
       customRequest: async ({ file, onSuccess, onError }) => {
-        const url = `${import.meta.env.VITE_API_URL}/upload/${mapper[name].en}`
+        const url = `${import.meta.env.VITE_API_URL}/upload/${mapper[table].en}`
         const header = { 'Content-Type': 'multipart/form-data' }
         const formData = new FormData()
         formData.append('file', file)
@@ -69,9 +68,9 @@ const SelectField = ({ name, onChange, onSearch }) => {
       {
         label: (
           <Upload {...props}>
-            <Space style={{ width: '100%' }}>
+            <Space style={{ width: '100%', height: 32 }}>
               <UploadOutlined />
-              {mapper[name].kr} 업로드
+              {mapper[table].kr} 업로드
             </Space>
           </Upload>
         ),
@@ -82,7 +81,7 @@ const SelectField = ({ name, onChange, onSearch }) => {
       },
       {
         label: (
-          <Space style={{ width: '100%' }} onClick={() => onClickOpenModal()}>
+          <Space style={{ width: '100%', height: 32 }} onClick={() => onClickOpenModal()}>
             <FormOutlined />
             거래처 등록
           </Space>
@@ -93,32 +92,48 @@ const SelectField = ({ name, onChange, onSearch }) => {
     []
   )
   const dispatch = useDispatch()
-  const [option, setOption] = useState([])
-  const [isModalOpen, setModalOpen] = useState(false)
+  // const [option, setOption] = useState([])
+  const option = useSelector(selectAllClientInfo)
+  const [modal, setModal] = useState({
+    open: false,
+    data: null,
+  })
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  console.log('option: ', option)
 
   useEffect(() => {
-    if (name === 'client') {
+    if (table === 'client') {
       dispatch(getAllClientInfo()).then((res) => {
         console.log('client: ', res.payload)
-        setOption(res.payload)
+        // setOption(res.payload)
       })
     }
-    if (name === 'vendor') {
+    if (table === 'vendor') {
       dispatch(getAllVendorInfo()).then((res) => {
         console.log('vendor: ', res.payload)
-        setOption(res.payload)
+        // setOption(res.payload)
       })
     }
   }, [])
 
-  const onClickOpenModal = () => {
-    setTimeout(() => setModalOpen(true), 200)
+  const onClickOpenModal = (data) => {
+    setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
+  }
+
+  const onClickEdit = (e, id) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const find = option.find((item) => item.id === id)
+    console.log('find: ', find)
+    setTimeout(() => onClickOpenModal(find), 200)
   }
 
   return (
     <>
       <Space wrap size="small">
-        <span>{mapper[name].kr}</span>
+        <span>{mapper[table].kr}</span>
         <ConfigProvider
           theme={{
             components: {
@@ -130,14 +145,34 @@ const SelectField = ({ name, onChange, onSearch }) => {
         >
           <Space.Compact block>
             <SelectWrapper
-              // open={true}
-              allowClear={true}
+              open={dropdownOpen}
               showSearch
-              placeholder={`${mapper[name].kr}을 선택해주세요`}
+              placeholder={`${mapper[table].kr}을 선택해주세요`}
               optionFilterProp="label"
               onChange={onChange}
               onSearch={onSearch}
-              options={option.map((item) => ({ value: item.id, label: item.name }))}
+              onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
+              optionLabelProp="name"
+              options={option.map((item) => ({
+                name: item.name,
+                value: item.id,
+                label: (
+                  <Flex align="center" justify="space-between">
+                    <span>{item.name}</span>
+                    <Flex gap={6}>
+                      <Button
+                        variant="text"
+                        color="defalut"
+                        icon={<EditOutlined style={{ color: '#a0a0a0' }} />}
+                        onClick={(e) => {
+                          setDropdownOpen(false)
+                          onClickEdit(e, item.id)
+                        }}
+                      />
+                    </Flex>
+                  </Flex>
+                ),
+              }))}
             />
 
             <Dropdown menu={{ items }} trigger={['click']}>
@@ -146,7 +181,7 @@ const SelectField = ({ name, onChange, onSearch }) => {
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal title={mapper[name].kr} formKey={name} isModalOpen={isModalOpen} setModalOpen={setModalOpen} />
+      <RegisterModal modal={modal} setModal={setModal} title={mapper[table].kr} table={table} />
     </>
   )
 }

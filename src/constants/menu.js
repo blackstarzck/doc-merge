@@ -365,7 +365,7 @@ export const TABLE_COLUMNS = [
 
 export const FORM_FILEDS = {
   organization: [{ name: '기관명', key: 'name', type: 'input' }],
-  client: [{ name: '거래처명', key: 'name', type: 'input' }],
+  client: [{ name: '거래처명', key: 'name', type: 'input', required: true, errMsg: '거래처명을 입력해주세요.' }],
   vendor: [
     { name: '업체명', key: 'name', type: 'input', required: true, errMsg: '업체명을 입력해주세요.' },
     { name: '대표', key: 'representative', type: 'input', required: true, errMsg: '대표 성함을 입력해주세요' },
@@ -376,5 +376,5 @@ export const FORM_FILEDS = {
     { name: '결제', key: 'payment', type: 'input', required: false, errMsg: '' },
     { name: '특징', key: 'features', type: 'textarea', required: false, errMsg: '' },
   ],
-  mark_info: [{ name: '기관명', key: 'name', type: 'input', required: false }],
+  mark_info: [{ name: '기관명', key: 'name', type: 'input', required: true, errMsg: '기관명을 입력해주세요.' }],
 }

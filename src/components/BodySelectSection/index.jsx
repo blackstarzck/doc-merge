@@ -15,9 +15,9 @@ const BodySelectSection = () => {
   return (
     <SpaceWrapper align="start">
       <Space wrap size="large">
-        <SelectField name="client" onChange={onChange} onSearch={onSearch} />
-        <SelectField name="vendor" onChange={onChange} onSearch={onSearch} />
-        <SelectField name="mark_info" onChange={onChange} onSearch={onSearch} />
+        <SelectField table="client" onChange={onChange} onSearch={onSearch} />
+        <SelectField table="vendor" onChange={onChange} onSearch={onSearch} />
+        <SelectField table="mark_info" onChange={onChange} onSearch={onSearch} />
       </Space>
       <Button type="primary" size="mdeium">
         생성

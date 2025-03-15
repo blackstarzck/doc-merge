@@ -1,18 +1,31 @@
 import { Button, Form, Input, message, Modal } from 'antd'
-import { useEffect } from 'react'
+import { Fragment, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 
 import { FORM_FILEDS } from '../../constants/menu'
+import { createClient, getAllClientInfo, updateClient } from '../../store/clientInfo/clientInfoSlice'
 
-const RegisterModal = ({ title, formKey, isModalOpen, setModalOpen }) => {
+const RegisterModal = ({ title, table, modal, setModal }) => {
   const [form] = Form.useForm()
+  const dispatch = useDispatch()
 
   const onsubmit = async () => {
     try {
-      const values = await form.validateFields()
+      let values = await form.validateFields()
       console.log('values: ', values)
-      message.success('저장 성공!')
-      setModalOpen(false)
+      console.log('modal.data: ', modal.data)
+      if (modal.data?.id) {
+        dispatch(updateClient({ id: modal.data.id, ...values })).then(() => {
+          message.success('수정 성공!')
+          setModal((prev) => ({ ...prev, open: false }))
+        })
+      } else {
+        dispatch(createClient(values)).then(() => {
+          message.success('저장 성공!')
+          setModal((prev) => ({ ...prev, open: false }))
+        })
+      }
     } catch (error) {
       console.log('save failed. ', error)
       message.error('유효성 검사 실패! 필수 항목을 확인해주세요.')
@@ -20,29 +33,32 @@ const RegisterModal = ({ title, formKey, isModalOpen, setModalOpen }) => {
   }
 
   useEffect(() => {
-    return () => {
-      console.log('RegisterModal unmount')
-      setTimeout(() => {
-        form.resetFields()
-      }, 200)
+    if (modal.data) {
+      form.setFieldsValue({ ...modal.data })
     }
-  }, [isModalOpen])
+  }, [modal.data])
+
+  useEffect(() => {
+    return () => {
+      form.resetFields()
+    }
+  }, [modal.open])
 
   return (
     <ModalWrapper
       centered
-      open={isModalOpen}
-      title={`거래처 신규등록`}
-      onCancel={() => setModalOpen(false)}
+      open={modal.open}
+      title={modal.data ? `(${title}) 거래처 수정하기` : `(${title}) 거래처 신규등록`}
+      onCancel={() => setModal((prev) => ({ modal: null, open: false }))}
       footer={() => (
         <Button type="primary" size="large" onClick={() => onsubmit()}>
-          저장
+          {modal.data ? '수정' : '등록'}
         </Button>
       )}
     >
       <Form
         form={form}
-        name={formKey}
+        name={table}
         autoComplete="off"
         labelCol={{ span: 4 }}
         labelAlign="left"
@@ -51,19 +67,19 @@ const RegisterModal = ({ title, formKey, isModalOpen, setModalOpen }) => {
         colon={false}
         style={{ maxWidth: 600 }}
       >
-        {FORM_FILEDS[formKey].map((field) => (
-          <>
+        {FORM_FILEDS[table].map((field) => (
+          <Fragment key={field.key}>
             {field.type === 'input' && (
               <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
-                <Input placeholder="-" />
+                <Input allowClear placeholder={modal.data ? modal.data[field.key] : '-'} />
               </Form.Item>
             )}
             {field.type === 'textarea' && (
               <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
-                <Input.TextArea placeholder="-" autoSize={{ minRows: 3, maxRows: 3 }} />
+                <Input.TextArea allowClear placeholder={modal.data ? modal.data[field.key] : '-'} autoSize={{ minRows: 3, maxRows: 3 }} />
               </Form.Item>
             )}
-          </>
+          </Fragment>
         ))}
       </Form>
     </ModalWrapper>

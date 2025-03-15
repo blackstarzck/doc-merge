@@ -1,19 +1,14 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons"
-import { Button, Divider, Flex, Form, Input, Select, Space, Tag } from "antd"
-import { useRef, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import styled from "styled-components"
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Divider, Flex, Form, Input, Select, Space, Tag } from 'antd'
+import { useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import styled from 'styled-components'
 
-import { TABLE_ELEMENTS } from "../../constants/options"
-import { setFormat } from "../../store/format/formatSlice"
-import {
-  addFormatItem,
-  FORMATTER_MODAL_NAME,
-  removeFormatItem,
-  selectAllFormatItems,
-} from "../../store/formatItems/formatItemsSlice"
-import { updateContents } from "../../store/modals/modalsSlice"
-import FormatModal from "../FormatModal"
+import { TABLE_ELEMENTS } from '../../constants/options'
+import { setFormat } from '../../store/format/formatSlice'
+import { addFormatItem, FORMATTER_MODAL_NAME, removeFormatItem, selectAllFormatItems } from '../../store/formatItems/formatItemsSlice'
+import { updateContents } from '../../store/modals/modalsSlice'
+import FormatModal from '../FormatModal'
 
 const setUniqueNumber = (array) => {
   // "custom-"으로 시작하는 항목 필터링 및 숫자 추출
@@ -45,9 +40,10 @@ const FormatHandler = () => {
   const [isDisabled, setIsDisabled] = useState(true)
   const formatItems = useSelector(selectAllFormatItems)
   const dispatch = useDispatch()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const onNameChange = (event) => {
-    setIsDisabled((prev) => !form.getFieldValue("customFormatName"))
+    setIsDisabled((prev) => !form.getFieldValue('customFormatName'))
   }
 
   const addItem = (e) => {
@@ -57,7 +53,7 @@ const FormatHandler = () => {
         const newNumber = setUniqueNumber(formatItems)
         const item = {
           key: `custom-${newNumber}`,
-          label: form.getFieldValue("customFormatName"),
+          label: form.getFieldValue('customFormatName'),
           elements: {
             all: null,
             first_columns_repeat: null,
@@ -73,17 +69,17 @@ const FormatHandler = () => {
         TABLE_ELEMENTS.forEach((element) => {
           item.elements = { ...item.elements, [element.key]: null }
         })
-        console.log("item: ", item)
+        console.log('item: ', item)
         dispatch(addFormatItem(item))
 
-        form.setFieldValue("customFormatName", "")
+        form.setFieldValue('customFormatName', '')
 
         setTimeout(() => {
           inputRef.current?.focus()
         }, 0)
       })
       .catch((error) => {
-        console.log("Validation failed:", error)
+        console.log('Validation failed:', error)
       })
   }
 
@@ -99,7 +95,7 @@ const FormatHandler = () => {
 
     const find = formatItems.find((item) => item.key === key)
 
-    console.log("find: ", find)
+    console.log('find: ', find)
 
     dispatch(
       updateContents({
@@ -117,7 +113,7 @@ const FormatHandler = () => {
     const isSameName = filter.length > 0
 
     if (isSameName) {
-      return Promise.reject(new Error("존재하는 서식이름입니다"))
+      return Promise.reject(new Error('존재하는 서식이름입니다'))
     }
     return Promise.resolve()
   }
@@ -126,54 +122,63 @@ const FormatHandler = () => {
     <>
       <Wrapper>
         <Select
+          open={dropdownOpen}
           defaultValue={formatItems[0].label}
           style={{ width: 300 }}
           onSelect={(key) => {
             const find = formatItems.find((item) => item.key === key)
 
-            console.log("find: ", find)
+            console.log('find: ', find)
 
             const filtered = Object.entries(find.elements)
               .filter(([key, value]) => value)
-              .map(item => ({ [item[0]]: item[1] }))
+              .map((item) => ({ [item[0]]: item[1] }))
 
-            console.log("filtered: ", filtered)
+            console.log('filtered: ', filtered)
 
-            if(filtered.length > 0) dispatch(setFormat(find))
-            if(filtered.length === 0) dispatch(updateContents({
-              visible: true,
-              modalName: FORMATTER_MODAL_NAME,
-              key,
-              label: find.label,
-              elements: find.elements
-            }))
+            if (filtered.length > 0) dispatch(setFormat(find))
+            if (filtered.length === 0)
+              dispatch(
+                updateContents({
+                  visible: true,
+                  modalName: FORMATTER_MODAL_NAME,
+                  key,
+                  label: find.label,
+                  elements: find.elements,
+                })
+              )
           }}
-          onDropdownVisibleChange={() => {
-            form.setFieldValue("customFormatName", "")
+          onDropdownVisibleChange={(visible) => {
+            setDropdownOpen(visible)
+            form.setFieldValue('customFormatName', '')
           }}
           optionLabelProp="key"
           options={formatItems.map((item) => ({
             label: (
               <OptionWrapper>
                 <div>
-                  {item.key.includes("custom") && (
-                    <Tag color="magenta">새 서식</Tag>
-                  )}
+                  {item.key.includes('custom') && <Tag color="magenta">새 서식</Tag>}
                   <span>{item.label}</span>
                 </div>
-                {item.key.includes("custom") && (
+                {item.key.includes('custom') && (
                   <Flex gap={6}>
                     <Button
                       variant="text"
                       color="defalut"
-                      icon={<EditOutlined />}
-                      onClick={(e) => onClickEditFormat(e, item.key)}
+                      icon={<EditOutlined style={{ color: '#a0a0a0' }} />}
+                      onClick={(e) => {
+                        setDropdownOpen(false)
+                        onClickEditFormat(e, item.key)
+                      }}
                     />
                     <Button
                       variant="text"
                       color="defalut"
-                      icon={<DeleteOutlined />}
-                      onClick={(e) => onClickDeleteFormat(e, item.key)}
+                      icon={<DeleteOutlined style={{ color: '#a0a0a0' }} />}
+                      onClick={(e) => {
+                        setDropdownOpen(false)
+                        onClickDeleteFormat(e, item.key)
+                      }}
                     />
                   </Flex>
                 )}
@@ -188,33 +193,14 @@ const FormatHandler = () => {
               // customized dropdown
               <>
                 {menu}
-                <Divider style={{ margin: "8px 0" }} />
-                <Space style={{ padding: "0 8px 4px" }}>
-                  <FormWrapper
-                    form={form}
-                    onFinish={addItem}
-                    autoComplete="off"
-                  >
-                    <Form.Item
-                      name="customFormatName"
-                      rules={[{ validator: validateSameName }]}
-                    >
-                      <Input
-                        ref={inputRef}
-                        allowClear
-                        autoSave="off"
-                        onChange={onNameChange}
-                        onKeyDown={(e) => e.stopPropagation()}
-                      />
+                <Divider style={{ margin: '8px 0' }} />
+                <Space style={{ padding: '0 8px 4px' }}>
+                  <FormWrapper form={form} onFinish={addItem} autoComplete="off">
+                    <Form.Item name="customFormatName" rules={[{ validator: validateSameName }]}>
+                      <Input ref={inputRef} allowClear autoSave="off" onChange={onNameChange} onKeyDown={(e) => e.stopPropagation()} />
                     </Form.Item>
                     <Form.Item>
-                      <Button
-                        label={null}
-                        htmlType="submit"
-                        disabled={isDisabled}
-                        type="text"
-                        icon={<PlusOutlined />}
-                      >
+                      <Button label={null} htmlType="submit" disabled={isDisabled} type="text" icon={<PlusOutlined />}>
                         Add item
                       </Button>
                     </Form.Item>
