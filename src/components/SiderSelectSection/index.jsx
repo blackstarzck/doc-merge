@@ -1,57 +1,117 @@
-import { Divider, Select, theme } from 'antd'
-import { useEffect, useState } from 'react'
+import { EditOutlined } from '@ant-design/icons'
+import { Button, Divider, Flex, Select, theme } from 'antd'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
-import { getAllOrganizationInfo, selectAllOrganizationInfo } from '../../store/organizationInfo/organizationInfoSlice'
-
-const defaultVal = 0
+import { getAllOrganization, selectAllOrganization } from '../../store/organization/organizationSlice'
+import RegisterModal from '../RegisterModal'
 
 const SiderSelectSection = ({ onClickSideMenu }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const { documentId, organizationId } = useIdsFromParams()
   const [isSelected, setIsSelected] = useState(false)
-  const names = useSelector(selectAllOrganizationInfo)
+  const [modal, setModal] = useState({
+    open: false,
+    data: null,
+  })
+  const names = useSelector(selectAllOrganization)
   const dispatch = useDispatch()
   const {
-    token: { colorPrimary },
+    token: { colorPrimary, colorPrimaryBgHover },
   } = theme.useToken()
 
   useEffect(() => {
-    dispatch(getAllOrganizationInfo())
+    dispatch(getAllOrganization())
   }, [])
 
   useEffect(() => {
     setIsSelected(() => (documentId ? false : true))
   }, [documentId, organizationId])
 
-  useEffect(() => {
-    // console.log("names: ", names);
-  }, [names])
+  const onClickOpenModal = useCallback((data) => {
+    setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
+  }, [])
+
+  const onClickEdit = useCallback(
+    (e, id) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const find = names.find((item) => item.id === id)
+      console.log('find: ', find)
+      setTimeout(() => onClickOpenModal(find), 200)
+    },
+    [names, onClickOpenModal]
+  )
+
+  const selectOptions = useMemo(
+    () =>
+      names.map((item) => ({
+        name: item.name,
+        value: item.id,
+        label: (
+          <Flex align="center" justify="space-between">
+            <span>{item.name}</span>
+            <Flex gap={6}>
+              <Button
+                variant="text"
+                color="defalut"
+                icon={<EditOutlined style={{ color: '#a0a0a0' }} />}
+                onClick={(e) => {
+                  setDropdownOpen(false)
+                  onClickEdit(e, item.id)
+                }}
+              />
+            </Flex>
+          </Flex>
+        ),
+      })),
+    [names, onClickEdit]
+  )
 
   return (
     <Wrapper>
       <Divider style={{ borderColor: 'rgba(255, 255, 255, .3)' }} />
       <SelectWrapper
+        open={dropdownOpen}
         showSearch
         size="large"
-        value={organizationId || defaultVal}
+        value={organizationId || null}
         $isSelected={isSelected}
         $primary={colorPrimary}
-        optionFilterProp="label"
+        optionFilterProp="name"
+        optionLabelProp="name"
+        onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
         onChange={(value) => onClickSideMenu(value)}
-        options={[
-          { value: defaultVal, label: '문서를 선택해주세요', disabled: true },
-          ...names.map((organization) => ({
-            value: organization.id,
-            label: organization.name,
-          })),
-        ]}
+        placeholder="문서를 선택해주세요"
+        options={selectOptions}
       />
+      <div style={{ textAlign: 'right' }}>
+        <ButtonWrapper $primary={colorPrimary} $hover={colorPrimaryBgHover} onClick={() => onClickOpenModal()}>
+          등록
+        </ButtonWrapper>
+        <RegisterModal modal={modal} setModal={setModal} subTitle="도서납품현황" table="organization" />
+      </div>
       {}
     </Wrapper>
   )
 }
+
+const ButtonWrapper = styled.button`
+  text-decoration: underline;
+  margin-top: 8px;
+  padding: 8px 16px;
+  color: ${({ $primary }) => $primary};
+  border-radius: 5px;
+  transition: background-color 0.15s;
+  margin-right: 6px;
+
+  &:hover {
+    background-color: rgba(22, 119, 255, 0.1);
+  }
+`
 
 const Wrapper = styled.div`
   width: 100%;

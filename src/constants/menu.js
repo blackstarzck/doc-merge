@@ -364,7 +364,6 @@ export const TABLE_COLUMNS = [
 ]
 
 export const FORM_FILEDS = {
-  organization: [{ name: '기관명', key: 'name', type: 'input' }],
   client: [{ name: '거래처명', key: 'name', type: 'input', required: true, errMsg: '거래처명을 입력해주세요.' }],
   vendor: [
     { name: '업체명', key: 'name', type: 'input', required: true, errMsg: '업체명을 입력해주세요.' },
@@ -372,9 +371,17 @@ export const FORM_FILEDS = {
     { name: '휴대전화', key: 'mobile_phone', type: 'textarea', required: false, errMsg: '' },
     { name: '사무실\n대표번호', key: 'office_phone', type: 'textarea', required: false, errMsg: '' },
     { name: '이메일', key: 'email', type: 'textarea', required: false, errMsg: '' },
-    { name: '출고율', key: 'shipping_rate', type: 'input', required: false, errMsg: '' },
+    { name: '출고율', key: 'shipping_rate', type: 'textarea', required: false, errMsg: '' },
     { name: '결제', key: 'payment', type: 'input', required: false, errMsg: '' },
-    { name: '특징', key: 'features', type: 'textarea', required: false, errMsg: '' },
+    { name: '특징', key: 'notes', type: 'textarea', required: false, errMsg: '' },
   ],
-  mark_info: [{ name: '기관명', key: 'name', type: 'input', required: true, errMsg: '기관명을 입력해주세요.' }],
+  mark_info: [
+    { name: '거래처명', key: 'name', type: 'input', required: true, errMsg: '거래처명을 입력해주세요.' },
+    { name: '아이피 주소', key: 'ip_address', type: 'input', required: false, errMsg: '' },
+    { name: '전화번호', key: 'phone', type: 'input', required: false, errMsg: '' },
+    { name: '이메일', key: 'email', type: 'input', required: false, errMsg: '' },
+    { name: '주소', key: 'address', type: 'textarea', required: false, errMsg: '' },
+    { name: '특징', key: 'notes', type: 'textarea', required: false, errMsg: '' },
+  ],
+  organization: [{ name: '기관명', key: 'name', type: 'input', required: true, errMsg: '기관명을 입력해주세요' }],
 }

@@ -3,12 +3,12 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 
 import { OVERVIEW_TABLES } from '../constants/menu'
-import { selectOrganizationInfoById } from '../store/organizationInfo/organizationInfoSlice'
+import { selectOrganizationById } from '../store/organization/organizationSlice'
 import { useIdsFromParams } from './useIdsFromParams'
 
 export const useSetFileName = () => {
   const { documentId, organizationId, clientId, vendorId } = useIdsFromParams()
-  const org = useSelector((state) => (organizationId ? selectOrganizationInfoById(state, organizationId) : null))
+  const org = useSelector((state) => (organizationId ? selectOrganizationById(state, organizationId) : null))
 
   return useMemo(() => {
     const yyyymmdd = DateTime.now().toFormat('yyyyMMdd')

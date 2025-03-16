@@ -1,34 +1,97 @@
-import { Button, Form, Input, message, Modal } from 'antd'
-import { Fragment, useEffect } from 'react'
+import { Button, Divider, Form, Input, message, Modal } from 'antd'
+import { Fragment, useEffect, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 
 import { FORM_FILEDS } from '../../constants/menu'
-import { createClient, getAllClientInfo, updateClient } from '../../store/clientInfo/clientInfoSlice'
+import { createClient, updateClient } from '../../store/client/clientSlice'
+import { createMarkClient, updateMarkClient } from '../../store/markClient/markClientSlice'
+import { createOrganization, updateOrganization } from '../../store/organization/organizationSlice'
+import { createVendor, updateVendor } from '../../store/vendor/vendorSlice'
 
-const RegisterModal = ({ title, table, modal, setModal }) => {
+const titleMap = {
+  client: {
+    register: '거래처 등록',
+    edit: '거래처 수정',
+  },
+  vendor: {
+    register: '거래처 등록',
+    edit: '거래처 수정',
+  },
+  mark_info: {
+    register: '거래처 등록',
+    edit: '거래처 수정',
+  },
+  organization: {
+    register: '기관 등록',
+    edit: '기관 수정',
+  },
+}
+
+const RegisterModal = ({ table, subTitle, modal, setModal }) => {
   const [form] = Form.useForm()
   const dispatch = useDispatch()
+  const [messageApi, contextHolder] = message.useMessage()
+  const title = useMemo(() => {
+    const action = modal.data?.id ? 'edit' : 'register'
+    return titleMap[table][action]
+  }, [modal.data])
 
-  const onsubmit = async () => {
+  const actionMap = useMemo(
+    () => ({
+      client: { create: createClient, update: updateClient },
+      vendor: { create: createVendor, update: updateVendor },
+      mark_info: { create: createMarkClient, update: updateMarkClient },
+      organization: { create: createOrganization, update: updateOrganization },
+    }),
+    []
+  )
+
+  const handleAction = (action, values, successMessage) => {
+    dispatch(action)
+      .then(() => {
+        messageApi.success(successMessage)
+      })
+      .catch((error) => console.log('error: ', error))
+      .finally(() => {
+        setModal((prev) => ({ ...prev, open: false }))
+      })
+  }
+
+  const handleCreate = (values) => {
+    const actionCreator = actionMap[table]?.create
+    if (!actionCreator) return
+
+    console.log('table:', table)
+    handleAction(actionCreator(values), values, '저장 성공!')
+  }
+
+  const handleUpdate = (values) => {
+    const actionCreator = actionMap[table]?.update
+    if (!actionCreator) return
+
+    console.log('table:', table)
+    const payload = { id: modal.data.id, ...values }
+    handleAction(actionCreator(payload), values, '수정 성공!')
+  }
+
+  const onSubmit = async () => {
     try {
-      let values = await form.validateFields()
-      console.log('values: ', values)
+      const rawValues = await form.validateFields()
+      console.log('rawValues: ', rawValues)
       console.log('modal.data: ', modal.data)
-      if (modal.data?.id) {
-        dispatch(updateClient({ id: modal.data.id, ...values })).then(() => {
-          message.success('수정 성공!')
-          setModal((prev) => ({ ...prev, open: false }))
-        })
-      } else {
-        dispatch(createClient(values)).then(() => {
-          message.success('저장 성공!')
-          setModal((prev) => ({ ...prev, open: false }))
-        })
-      }
+
+      const values = Object.fromEntries(
+        Object.entries(rawValues).map(([key, value]) => [key, value ?? '']) // undefined를 ''로 변환
+      )
+
+      console.log('values: ', values)
+
+      const actionHandler = modal.data?.id ? handleUpdate : handleCreate
+      actionHandler(values)
     } catch (error) {
       console.log('save failed. ', error)
-      message.error('유효성 검사 실패! 필수 항목을 확인해주세요.')
+      messageApi.error('유효성 검사 실패! 필수 항목을 확인해주세요.')
     }
   }
 
@@ -48,10 +111,16 @@ const RegisterModal = ({ title, table, modal, setModal }) => {
     <ModalWrapper
       centered
       open={modal.open}
-      title={modal.data ? `(${title}) 거래처 수정하기` : `(${title}) 거래처 신규등록`}
+      title={
+        <Fragment>
+          <h4>{title}</h4>
+          <span style={{ fontSize: 14, fontWeight: 400, color: '#a7a7a7' }}>{subTitle}</span>
+          <Divider />
+        </Fragment>
+      }
       onCancel={() => setModal((prev) => ({ modal: null, open: false }))}
       footer={() => (
-        <Button type="primary" size="large" onClick={() => onsubmit()}>
+        <Button type="primary" size="large" onClick={() => onSubmit()}>
           {modal.data ? '수정' : '등록'}
         </Button>
       )}
@@ -60,7 +129,7 @@ const RegisterModal = ({ title, table, modal, setModal }) => {
         form={form}
         name={table}
         autoComplete="off"
-        labelCol={{ span: 4 }}
+        labelCol={{ span: 6 }}
         labelAlign="left"
         labelWrap
         wrapperCol={{ flex: 1 }}
@@ -71,12 +140,12 @@ const RegisterModal = ({ title, table, modal, setModal }) => {
           <Fragment key={field.key}>
             {field.type === 'input' && (
               <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
-                <Input allowClear placeholder={modal.data ? modal.data[field.key] : '-'} />
+                <Input placeholder={modal.data && field.key === 'required' ? modal.data[field.key] : '-'} />
               </Form.Item>
             )}
             {field.type === 'textarea' && (
               <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
-                <Input.TextArea allowClear placeholder={modal.data ? modal.data[field.key] : '-'} autoSize={{ minRows: 3, maxRows: 3 }} />
+                <Input.TextArea placeholder={modal.data && field.key === 'required' ? modal.data[field.key] : '-'} autoSize={{ minRows: 2, maxRows: 2 }} />
               </Form.Item>
             )}
           </Fragment>

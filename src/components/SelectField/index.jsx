@@ -1,13 +1,10 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Dropdown, Flex, Form, Input, message, Modal, Select, Space, Tooltip, Upload } from 'antd'
+import { Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
 import { theme } from 'antd'
-import axios from 'axios'
-import { useEffect, useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React, { useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
-import { getAllClientInfo, selectAllClientInfo } from '../../store/clientInfo/clientInfoSlice'
-import { getAllVendorInfo, selectAllVendorInfo } from '../../store/vendorInfo/vendorInfoSlice'
+import api from '../../api/api'
 import RegisterModal from '../RegisterModal'
 
 const { useToken } = theme
@@ -18,7 +15,12 @@ const mapper = {
   mark_info: { en: 'mark_info', kr: '마크장비 진행현황' },
 }
 
-const SelectField = ({ table, onChange, onSearch }) => {
+const SelectField = ({ option, table }) => {
+  const [modal, setModal] = useState({
+    open: false,
+    data: null,
+  })
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const { token } = useToken()
   const [messageApi, contextHolder] = message.useMessage()
   const props = useMemo(
@@ -47,7 +49,7 @@ const SelectField = ({ table, onChange, onSearch }) => {
         const formData = new FormData()
         formData.append('file', file)
         try {
-          const response = await axios.post(url, {}, header).then((res) => res)
+          const response = await api.post(url, {}, header).then((res) => res)
 
           console.log('response: ', response)
 
@@ -91,44 +93,48 @@ const SelectField = ({ table, onChange, onSearch }) => {
     ],
     []
   )
-  const dispatch = useDispatch()
-  // const [option, setOption] = useState([])
-  const option = useSelector(selectAllClientInfo)
-  const [modal, setModal] = useState({
-    open: false,
-    data: null,
-  })
-  const [dropdownOpen, setDropdownOpen] = useState(false)
 
-  console.log('option: ', option)
-
-  useEffect(() => {
-    if (table === 'client') {
-      dispatch(getAllClientInfo()).then((res) => {
-        console.log('client: ', res.payload)
-        // setOption(res.payload)
-      })
-    }
-    if (table === 'vendor') {
-      dispatch(getAllVendorInfo()).then((res) => {
-        console.log('vendor: ', res.payload)
-        // setOption(res.payload)
-      })
-    }
+  const onClickOpenModal = useCallback((data) => {
+    setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
   }, [])
 
-  const onClickOpenModal = (data) => {
-    setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
-  }
+  const onClickEdit = useCallback(
+    (e, id) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-  const onClickEdit = (e, id) => {
-    e.preventDefault()
-    e.stopPropagation()
+      const find = option.find((item) => item.id === id)
+      console.log('find: ', find)
+      setTimeout(() => onClickOpenModal(find), 200)
+    },
+    [option, onClickOpenModal]
+  )
 
-    const find = option.find((item) => item.id === id)
-    console.log('find: ', find)
-    setTimeout(() => onClickOpenModal(find), 200)
-  }
+  const selectOptions = useMemo(() => {
+    console.log('option================================ ', option)
+    return option.map((item) => ({
+      name: item.name,
+      value: item.id,
+      label: (
+        <Flex align="center" justify="space-between">
+          <span>{item.name}</span>
+          <Flex gap={6}>
+            <Button
+              variant="text"
+              color="defalut"
+              icon={<EditOutlined style={{ color: '#a0a0a0' }} />}
+              onClick={(e) => {
+                setDropdownOpen(false)
+                onClickEdit(e, item.id)
+              }}
+            />
+          </Flex>
+        </Flex>
+      ),
+    }))
+  }, [option, onClickEdit])
+
+  console.log(`=====================================${table} renderd=====================================`)
 
   return (
     <>
@@ -148,31 +154,10 @@ const SelectField = ({ table, onChange, onSearch }) => {
               open={dropdownOpen}
               showSearch
               placeholder={`${mapper[table].kr}을 선택해주세요`}
-              optionFilterProp="label"
-              onChange={onChange}
-              onSearch={onSearch}
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
+              optionFilterProp="name"
               optionLabelProp="name"
-              options={option.map((item) => ({
-                name: item.name,
-                value: item.id,
-                label: (
-                  <Flex align="center" justify="space-between">
-                    <span>{item.name}</span>
-                    <Flex gap={6}>
-                      <Button
-                        variant="text"
-                        color="defalut"
-                        icon={<EditOutlined style={{ color: '#a0a0a0' }} />}
-                        onClick={(e) => {
-                          setDropdownOpen(false)
-                          onClickEdit(e, item.id)
-                        }}
-                      />
-                    </Flex>
-                  </Flex>
-                ),
-              }))}
+              options={selectOptions}
             />
 
             <Dropdown menu={{ items }} trigger={['click']}>
@@ -181,7 +166,7 @@ const SelectField = ({ table, onChange, onSearch }) => {
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal modal={modal} setModal={setModal} title={mapper[table].kr} table={table} />
+      <RegisterModal modal={modal} setModal={setModal} subTitle={mapper[table].kr} table={table} />
     </>
   )
 }
@@ -194,4 +179,4 @@ const SelectWrapper = styled(Select)`
   }
 `
 
-export default SelectField
+export default React.memo(SelectField)

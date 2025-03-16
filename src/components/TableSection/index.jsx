@@ -10,7 +10,7 @@ import styled from 'styled-components'
 import useCurrentDocumentColumns from '../../hooks/useCurrentDocumentColumns'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { deleteDocument, getDocument, postDocument, selectAllDocuments } from '../../store/document/documentSlice'
-import { selectOrganizationInfoById } from '../../store/organizationInfo/organizationInfoSlice'
+import { selectOrganizationById } from '../../store/organization/organizationSlice'
 import ActionHandler from '../ActionHandler'
 
 const myTheme = themeQuartz.withParams({
@@ -42,7 +42,7 @@ const TableSection = () => {
   const { loading: postLoading, error: postError } = useSelector((state) => state.document.post)
   const { loading: deleteLoading, error: deleteError } = useSelector((state) => state.document.delete)
   const document = useSelector(selectAllDocuments)
-  const org = useSelector((state) => (organizationId ? selectOrganizationInfoById(state, organizationId) : null))
+  const org = useSelector((state) => (organizationId ? selectOrganizationById(state, organizationId) : null))
   const count = useRef(0)
   const theme = useMemo(() => {
     return myTheme
@@ -108,7 +108,7 @@ const TableSection = () => {
         setRowData(data)
       })
       .catch((error) => console.error('Failed to load data', error))
-  }, [documentId, organizationId, currentDocumentColumns, dispatch, location])
+  }, [])
 
   const createOneDocumentRecord = useCallback(() => {
     const record = currentDocumentColumns.reduce((acc, column) => {
@@ -137,13 +137,7 @@ const TableSection = () => {
 
     const ids = selecteDatas.filter((data) => typeof data.id === 'number').map((data) => data.id)
 
-    dispatch(
-      deleteDocument({
-        path: documentId || 'organizations',
-        documentId: organizationId || '',
-        ids,
-      })
-    )
+    dispatch(deleteDocument({ path: location.pathname, ids }))
       .then((res) => {
         console.log('After delete data', res)
         if (res.type.includes('rejected')) {
@@ -217,8 +211,7 @@ const TableSection = () => {
     })
     dispatch(
       postDocument({
-        path: documentId || 'organizations',
-        documentId: organizationId || '',
+        path: location.pathname,
         document: rowData,
       })
     )

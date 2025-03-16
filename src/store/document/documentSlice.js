@@ -1,12 +1,11 @@
 import { createAsyncThunk, createEntityAdapter, createSlice } from '@reduxjs/toolkit'
-import axios from 'axios'
 
-import { deleteApi, getApi, postApi } from '../../api'
+import api from '../../api/api'
 
 // Thunks
 export const getDocument = createAsyncThunk('document/get', async (path) => {
   console.log('path: ', path)
-  return await axios
+  return await api
     .get(path)
     .then((res) => res.data)
     .catch((error) => {
@@ -15,20 +14,26 @@ export const getDocument = createAsyncThunk('document/get', async (path) => {
 })
 
 export const postDocument = createAsyncThunk('document/update', async (payload, { rejectWithValue }) => {
-  const { path, documentId, document } = payload
-  try {
-    const res = await postApi[path]({ documentId, document })
-    console.log('from slice post: ', res)
-    return res
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update')
-  }
+  const { path, document } = payload
+  const result = await api
+    .post(path, { document })
+    .then((res) => res.data)
+    .catch((error) => {
+      throw new Error('GET-ERROR. 콘솔로그를 확인해주세요.')
+    })
+  return result
 })
 
 export const deleteDocument = createAsyncThunk('document/delete', async (payload) => {
-  const { path, documentId, ids } = payload
-  console.log('delete payload: ', payload)
-  return await deleteApi[path]({ documentId, ids })
+  const { path, ids } = payload
+  console.log('payload: ', payload)
+  const result = await api
+    .post(`${path}/delete`, { ids })
+    .then((res) => res.data)
+    .catch((error) => {
+      throw new Error('GET-ERROR. 콘솔로그를 확인해주세요.')
+    })
+  return result
 })
 
 // Adapter

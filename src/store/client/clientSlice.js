@@ -1,28 +1,31 @@
 import { createAsyncThunk, createEntityAdapter, createSlice } from '@reduxjs/toolkit'
-import axios from 'axios'
+import api from '../../api/api'
 
 // Thunks
-export const getAllClientInfo = createAsyncThunk('client-info/get', async () => {
-  const result = await axios
+export const getAllClient = createAsyncThunk('client-info/get', async () => {
+  const result = await api
     .get('/client')
     .then((res) => res.data)
-    .catch((error) => console.log('error: ', error))
+    .catch((error) => {
+      throw new Error('error: ', error)
+    })
   console.log('client get result: ', result)
   return result
 })
 
 export const createClient = createAsyncThunk('client-info/create', async (data) => {
-  const result = await axios
+  const result = await api
     .post('/client', { data })
     .then((res) => res.data)
-    .catch((error) => console.log('error: ', error))
+    .catch((error) => {
+      throw new Error('error: ', error)
+    })
   console.log('client post result: ', result)
   return result
 })
 
 export const updateClient = createAsyncThunk('client-info/update', async (payload) => {
-  console.log('payload: ', payload)
-  const result = await axios
+  const result = await api
     .put(`/client/${payload.id}`, { data: { ...payload } })
     .then((res) => res.data)
     .catch((error) => {
@@ -35,18 +38,18 @@ export const updateClient = createAsyncThunk('client-info/update', async (payloa
 
 // Adapter
 const infoAdapter = createEntityAdapter({
-  selectId: (name) => name.id,
+  selectId: (client) => client.id,
 })
 
 // Initial State
 const initialState = infoAdapter.getInitialState()
 
-export const clientInfoSlice = createSlice({
-  name: 'clientInfo',
+export const clientSlice = createSlice({
+  name: 'client',
   initialState,
   extraReducers: (builder) => {
     // GET
-    builder.addCase(getAllClientInfo.fulfilled, infoAdapter.setAll)
+    builder.addCase(getAllClient.fulfilled, infoAdapter.setAll)
     // POST
     builder.addCase(createClient.fulfilled, infoAdapter.addOne)
     // PUT
@@ -54,13 +57,9 @@ export const clientInfoSlice = createSlice({
   },
 })
 
-export const { updateClientById } = clientInfoSlice.actions
+export const { updateClientById } = clientSlice.actions
 
 // Selectors
-export const {
-  selectAll: selectAllClientInfo,
-  selectById: selectClientInfoById,
-  selectIds: selectClientIds,
-} = infoAdapter.getSelectors((state) => state.clientInfo)
+export const { selectAll: selectAllClient, selectById: selectClientById, selectIds: selectClientIds } = infoAdapter.getSelectors((state) => state.client)
 
-export default clientInfoSlice.reducer
+export default clientSlice.reducer

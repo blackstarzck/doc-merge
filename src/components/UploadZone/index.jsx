@@ -1,6 +1,6 @@
 import { UploadOutlined } from '@ant-design/icons'
 import { message, Upload } from 'antd'
-import axios from 'axios'
+import api from '../../api/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
@@ -42,7 +42,7 @@ const UploadZone = () => {
       const formData = new FormData()
       formData.append('file', file)
       try {
-        const response = await axios
+        const response = await api
           .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
           .then((res) => {
             dispatch(getDocument(location.pathname))
