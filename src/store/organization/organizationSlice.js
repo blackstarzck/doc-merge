@@ -10,7 +10,6 @@ export const getAllOrganization = createAsyncThunk('organization-info/get', asyn
     .catch((error) => {
       throw new Error('error: ', error)
     })
-  console.log('organization info get result: ', result)
   return result
 })
 
@@ -43,7 +42,9 @@ const infoAdapter = createEntityAdapter({
 })
 
 // Initial State
-const initialState = infoAdapter.getInitialState()
+const initialState = infoAdapter.getInitialState({
+  error: null, // 에러 상태 추가
+})
 
 // Slice
 export const organizationSlice = createSlice({
@@ -52,11 +53,19 @@ export const organizationSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     // GET
-    builder.addCase(getAllOrganization.fulfilled, infoAdapter.setAll)
+    builder.addCase(getAllOrganization.fulfilled, infoAdapter.setAll).addCase(getAllOrganization.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
+
     // POST
-    builder.addCase(createOrganization.fulfilled, infoAdapter.addOne)
+    builder.addCase(createOrganization.fulfilled, infoAdapter.addOne).addCase(createOrganization.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
+
     // PUT
-    builder.addCase(updateOrganization.fulfilled, infoAdapter.updateOne)
+    builder.addCase(updateOrganization.fulfilled, infoAdapter.updateOne).addCase(updateOrganization.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
   },
 })
 

@@ -1,17 +1,19 @@
 import { EditOutlined } from '@ant-design/icons'
-import { Button, Divider, Flex, Select, theme } from 'antd'
+import { App, Button, Divider, Flex, Select, theme, Tooltip } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
-import { getAllOrganization, selectAllOrganization } from '../../store/organization/organizationSlice'
+import { createOrganization, getAllOrganization, selectAllOrganization, updateOrganization } from '../../store/organization/organizationSlice'
 import RegisterModal from '../RegisterModal'
 
 const SiderSelectSection = ({ onClickSideMenu }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState(null)
   const { documentId, organizationId } = useIdsFromParams()
   const [isSelected, setIsSelected] = useState(false)
+  const { message } = App.useApp()
   const [modal, setModal] = useState({
     open: false,
     data: null,
@@ -21,14 +23,6 @@ const SiderSelectSection = ({ onClickSideMenu }) => {
   const {
     token: { colorPrimary, colorPrimaryBgHover },
   } = theme.useToken()
-
-  useEffect(() => {
-    dispatch(getAllOrganization())
-  }, [])
-
-  useEffect(() => {
-    setIsSelected(() => (documentId ? false : true))
-  }, [documentId, organizationId])
 
   const onClickOpenModal = useCallback((data) => {
     setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
@@ -53,7 +47,11 @@ const SiderSelectSection = ({ onClickSideMenu }) => {
         value: item.id,
         label: (
           <Flex align="center" justify="space-between">
-            <span>{item.name}</span>
+            <Tooltip title={item.name}>
+              <Name>
+                {item.year && `${item.year}년`} {item.name}
+              </Name>
+            </Tooltip>
             <Flex gap={6}>
               <Button
                 variant="text"
@@ -71,11 +69,57 @@ const SiderSelectSection = ({ onClickSideMenu }) => {
     [names, onClickEdit]
   )
 
+  const handleCreate = (values) => {
+    dispatch(createOrganization(values))
+      .then((res) => {
+        if (res.type.includes('rejected')) {
+          setSubmitStatus('error')
+        } else {
+          setSubmitStatus('success')
+        }
+      })
+      .catch((error) => {
+        setSubmitStatus('error')
+      })
+  }
+
+  const handleUpdate = (values) => {
+    dispatch(updateOrganization({ id: values.id, ...values }))
+      .then((res) => {
+        if (res.type.includes('rejected')) {
+          setSubmitStatus('error')
+        } else {
+          setSubmitStatus('success')
+        }
+      })
+      .catch((error) => {
+        setSubmitStatus('error')
+      })
+  }
+
+  useEffect(() => {
+    if (submitStatus === 'success') {
+      message.success('저장 성공!')
+      setModal((prev) => ({ ...prev, open: false }))
+    } else if (submitStatus === 'error') {
+      message.error('저장 실패!')
+    }
+  }, [submitStatus])
+
+  useEffect(() => {
+    dispatch(getAllOrganization())
+  }, [])
+
+  useEffect(() => {
+    setIsSelected(() => (documentId ? false : true))
+  }, [documentId, organizationId])
+
   return (
     <Wrapper>
       <Divider style={{ borderColor: 'rgba(255, 255, 255, .3)' }} />
       <SelectWrapper
         open={dropdownOpen}
+        // open={true}
         showSearch
         size="large"
         value={organizationId || null}
@@ -92,7 +136,7 @@ const SiderSelectSection = ({ onClickSideMenu }) => {
         <ButtonWrapper $primary={colorPrimary} $hover={colorPrimaryBgHover} onClick={() => onClickOpenModal()}>
           등록
         </ButtonWrapper>
-        <RegisterModal modal={modal} setModal={setModal} subTitle="도서납품현황" table="organization" />
+        <RegisterModal modal={modal} setModal={setModal} subTitle="도서납품현황" table="organization" handleCreate={handleCreate} handleUpdate={handleUpdate} />
       </div>
       {}
     </Wrapper>
@@ -111,6 +155,11 @@ const ButtonWrapper = styled.button`
   &:hover {
     background-color: rgba(22, 119, 255, 0.1);
   }
+`
+
+const Name = styled.span`
+  text-overflow: ellipsis;
+  overflow: hidden;
 `
 
 const Wrapper = styled.div`

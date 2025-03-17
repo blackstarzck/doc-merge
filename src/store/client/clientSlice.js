@@ -1,4 +1,5 @@
 import { createAsyncThunk, createEntityAdapter, createSlice } from '@reduxjs/toolkit'
+
 import api from '../../api/api'
 
 // Thunks
@@ -9,7 +10,6 @@ export const getAllClient = createAsyncThunk('client-info/get', async () => {
     .catch((error) => {
       throw new Error('error: ', error)
     })
-  console.log('client get result: ', result)
   return result
 })
 
@@ -39,6 +39,7 @@ export const updateClient = createAsyncThunk('client-info/update', async (payloa
 // Adapter
 const infoAdapter = createEntityAdapter({
   selectId: (client) => client.id,
+  sortComparer: (a, b) => a.id - b.id, // 오름차순 정렬 (ASC)
 })
 
 // Initial State

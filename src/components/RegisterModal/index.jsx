@@ -1,13 +1,8 @@
-import { Button, Divider, Form, Input, message, Modal } from 'antd'
+import { App, Button, Divider, Form, Input, InputNumber, Modal } from 'antd'
 import { Fragment, useEffect, useMemo } from 'react'
-import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
 
 import { FORM_FILEDS } from '../../constants/menu'
-import { createClient, updateClient } from '../../store/client/clientSlice'
-import { createMarkClient, updateMarkClient } from '../../store/markClient/markClientSlice'
-import { createOrganization, updateOrganization } from '../../store/organization/organizationSlice'
-import { createVendor, updateVendor } from '../../store/vendor/vendorSlice'
 
 const titleMap = {
   client: {
@@ -28,52 +23,13 @@ const titleMap = {
   },
 }
 
-const RegisterModal = ({ table, subTitle, modal, setModal }) => {
+const RegisterModal = ({ table, subTitle, modal, setModal, handleCreate, handleUpdate }) => {
   const [form] = Form.useForm()
-  const dispatch = useDispatch()
-  const [messageApi, contextHolder] = message.useMessage()
+  const { message } = App.useApp()
   const title = useMemo(() => {
     const action = modal.data?.id ? 'edit' : 'register'
     return titleMap[table][action]
   }, [modal.data])
-
-  const actionMap = useMemo(
-    () => ({
-      client: { create: createClient, update: updateClient },
-      vendor: { create: createVendor, update: updateVendor },
-      mark_info: { create: createMarkClient, update: updateMarkClient },
-      organization: { create: createOrganization, update: updateOrganization },
-    }),
-    []
-  )
-
-  const handleAction = (action, values, successMessage) => {
-    dispatch(action)
-      .then(() => {
-        messageApi.success(successMessage)
-      })
-      .catch((error) => console.log('error: ', error))
-      .finally(() => {
-        setModal((prev) => ({ ...prev, open: false }))
-      })
-  }
-
-  const handleCreate = (values) => {
-    const actionCreator = actionMap[table]?.create
-    if (!actionCreator) return
-
-    console.log('table:', table)
-    handleAction(actionCreator(values), values, '저장 성공!')
-  }
-
-  const handleUpdate = (values) => {
-    const actionCreator = actionMap[table]?.update
-    if (!actionCreator) return
-
-    console.log('table:', table)
-    const payload = { id: modal.data.id, ...values }
-    handleAction(actionCreator(payload), values, '수정 성공!')
-  }
 
   const onSubmit = async () => {
     try {
@@ -87,11 +43,14 @@ const RegisterModal = ({ table, subTitle, modal, setModal }) => {
 
       console.log('values: ', values)
 
-      const actionHandler = modal.data?.id ? handleUpdate : handleCreate
-      actionHandler(values)
+      if (modal.data?.id) {
+        handleUpdate({ ...modal.data, ...values })
+      } else {
+        handleCreate({ ...modal.data, ...values })
+      }
     } catch (error) {
       console.log('save failed. ', error)
-      messageApi.error('유효성 검사 실패! 필수 항목을 확인해주세요.')
+      message.error('유효성 검사 실패! 필수 항목을 확인해주세요.')
     }
   }
 
@@ -146,6 +105,11 @@ const RegisterModal = ({ table, subTitle, modal, setModal }) => {
             {field.type === 'textarea' && (
               <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
                 <Input.TextArea placeholder={modal.data && field.key === 'required' ? modal.data[field.key] : '-'} autoSize={{ minRows: 2, maxRows: 2 }} />
+              </Form.Item>
+            )}
+            {field.type === 'inputnumber' && (
+              <Form.Item name={field.key} label={field.name} rules={[{ required: field.required, message: field.errMsg }]}>
+                <InputNumber placeholder={modal.data && field.key === 'required' ? modal.data[field.key] : '-'} />
               </Form.Item>
             )}
           </Fragment>

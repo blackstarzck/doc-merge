@@ -1,28 +1,31 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
+import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
 import { theme } from 'antd'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import api from '../../api/api'
-import RegisterModal from '../RegisterModal'
+import api from '../../../api/api'
+import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
+import { createVendor, getAllVendor, selectAllVendor, updateVendor } from '../../../store/vendor/vendorSlice'
+import RegisterModal from '../../RegisterModal'
 
 const { useToken } = theme
 
-const mapper = {
-  vendor: { en: 'vendor', kr: '매입처 원장' },
-  client: { en: 'client', kr: '매출처 원장' },
-  mark_info: { en: 'mark_info', kr: '마크장비 진행현황' },
-}
-
-const SelectField = ({ option, table }) => {
+const VendorLedger = () => {
+  const { vendorId } = useIdsFromParams()
+  const vendors = useSelector(selectAllVendor) || []
+  const dispatch = useDispatch()
   const [modal, setModal] = useState({
     open: false,
     data: null,
   })
+  const [submitStatus, setSubmitStatus] = useState(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { token } = useToken()
-  const [messageApi, contextHolder] = message.useMessage()
+  const { message } = App.useApp()
+  const navigate = useNavigate()
   const props = useMemo(
     () => ({
       name: 'file',
@@ -37,14 +40,14 @@ const SelectField = ({ option, table }) => {
           file.name.endsWith('.xls')
 
         if (!isExcel) {
-          messageApi.open({ type: 'error', content: '엑셀 파일만 업로드할 수 있습니다.' })
+          message.open({ type: 'error', content: '엑셀 파일만 업로드할 수 있습니다.' })
           return false
         }
 
         return true
       },
       customRequest: async ({ file, onSuccess, onError }) => {
-        const url = `${import.meta.env.VITE_API_URL}/upload/${mapper[table].en}`
+        const url = `${import.meta.env.VITE_API_URL}/upload/vendor`
         const header = { 'Content-Type': 'multipart/form-data' }
         const formData = new FormData()
         formData.append('file', file)
@@ -53,11 +56,11 @@ const SelectField = ({ option, table }) => {
 
           console.log('response: ', response)
 
-          messageApi.open({ type: 'success', content: '파일 업로드 성공!' })
+          message.open({ type: 'success', content: '파일 업로드 성공!' })
           onSuccess(response.data)
         } catch (error) {
           console.log('error: ', error)
-          messageApi.open({ type: 'error', content: '파일 업로드 실패.' })
+          message.open({ type: 'error', content: '파일 업로드 실패.' })
           onError(error)
         }
       },
@@ -72,7 +75,7 @@ const SelectField = ({ option, table }) => {
           <Upload {...props}>
             <Space style={{ width: '100%', height: 32 }}>
               <UploadOutlined />
-              {mapper[table].kr} 업로드
+              매출처 원장 업로드
             </Space>
           </Upload>
         ),
@@ -103,16 +106,15 @@ const SelectField = ({ option, table }) => {
       e.preventDefault()
       e.stopPropagation()
 
-      const find = option.find((item) => item.id === id)
+      const find = vendors.find((item) => item.id === id)
       console.log('find: ', find)
       setTimeout(() => onClickOpenModal(find), 200)
     },
-    [option, onClickOpenModal]
+    [vendors, onClickOpenModal]
   )
 
   const selectOptions = useMemo(() => {
-    console.log('option================================ ', option)
-    return option.map((item) => ({
+    return vendors.map((item) => ({
       name: item.name,
       value: item.id,
       label: (
@@ -132,14 +134,53 @@ const SelectField = ({ option, table }) => {
         </Flex>
       ),
     }))
-  }, [option, onClickEdit])
+  }, [vendors, onClickEdit])
 
-  console.log(`=====================================${table} renderd=====================================`)
+  const handleCreate = (values) => {
+    dispatch(createVendor(values))
+      .then((res) => {
+        if (res.type.includes('rejected')) {
+          setSubmitStatus('error')
+        } else {
+          setSubmitStatus('success')
+        }
+      })
+      .catch((error) => {
+        setSubmitStatus('error')
+      })
+  }
+
+  const handleUpdate = (values) => {
+    dispatch(updateVendor({ id: vendorId, ...values }))
+      .then((res) => {
+        if (res.type.includes('rejected')) {
+          setSubmitStatus('error')
+        } else {
+          setSubmitStatus('success')
+        }
+      })
+      .catch((error) => {
+        setSubmitStatus('error')
+      })
+  }
+
+  useEffect(() => {
+    if (submitStatus === 'success') {
+      message.success('저장 성공!')
+      setModal((prev) => ({ ...prev, open: false }))
+    } else if (submitStatus === 'error') {
+      message.error('저장 실패!')
+    }
+  }, [submitStatus])
+
+  useEffect(() => {
+    dispatch(getAllVendor())
+  }, [])
 
   return (
     <>
       <Space wrap size="small">
-        <span>{mapper[table].kr}</span>
+        <span>매출처 원장</span>
         <ConfigProvider
           theme={{
             components: {
@@ -152,12 +193,16 @@ const SelectField = ({ option, table }) => {
           <Space.Compact block>
             <SelectWrapper
               open={dropdownOpen}
+              value={vendorId || undefined}
               showSearch
-              placeholder={`${mapper[table].kr}을 선택해주세요`}
+              placeholder="매출처 원장을 선택해주세요"
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
               optionFilterProp="name"
               optionLabelProp="name"
               options={selectOptions}
+              onSelect={(value) => {
+                navigate(`/vendor_ledger/${value}`)
+              }}
             />
 
             <Dropdown menu={{ items }} trigger={['click']}>
@@ -166,7 +211,7 @@ const SelectField = ({ option, table }) => {
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal modal={modal} setModal={setModal} subTitle={mapper[table].kr} table={table} />
+      <RegisterModal modal={modal} setModal={setModal} subTitle="매출처 원장" table="vendor" handleCreate={handleCreate} handleUpdate={handleUpdate} />
     </>
   )
 }
@@ -184,4 +229,4 @@ const SelectWrapper = styled(Select)`
   }
 `
 
-export default React.memo(SelectField)
+export default React.memo(VendorLedger)

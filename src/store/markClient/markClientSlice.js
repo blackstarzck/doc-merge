@@ -10,7 +10,6 @@ export const getAllMarkClient = createAsyncThunk('mark-client/get', async () => 
     .catch((error) => {
       throw new Error('error: ', error)
     })
-  console.log('mark client get result: ', result)
   return result
 })
 
@@ -41,21 +40,32 @@ export const updateMarkClient = createAsyncThunk('mark-client/update', async (pa
 // Adapter
 const infoAdapter = createEntityAdapter({
   selectId: (client) => client.id,
+  sortComparer: (a, b) => a.id - b.id, // 오름차순 정렬 (ASC)
 })
 
 // Initial State
-const initialState = infoAdapter.getInitialState()
+const initialState = infoAdapter.getInitialState({
+  error: null, // 에러 상태 추가
+})
 
 export const markClientSlice = createSlice({
   name: 'markClient',
   initialState,
   extraReducers: (builder) => {
     // GET
-    builder.addCase(getAllMarkClient.fulfilled, infoAdapter.setAll)
+    builder.addCase(getAllMarkClient.fulfilled, infoAdapter.setAll).addCase(getAllMarkClient.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
+
     // POST
-    builder.addCase(createMarkClient.fulfilled, infoAdapter.addOne)
+    builder.addCase(createMarkClient.fulfilled, infoAdapter.addOne).addCase(createMarkClient.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
+
     // PUT
-    builder.addCase(updateMarkClient.fulfilled, infoAdapter.updateOne)
+    builder.addCase(updateMarkClient.fulfilled, infoAdapter.updateOne).addCase(updateMarkClient.rejected, (state, action) => {
+      state.error = action.error.message // 에러 메시지 저장
+    })
   },
 })
 

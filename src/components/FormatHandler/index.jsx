@@ -158,7 +158,7 @@ const FormatHandler = () => {
               <OptionWrapper>
                 <div>
                   {item.key.includes('custom') && <Tag color="magenta">새 서식</Tag>}
-                  <span>{item.label}</span>
+                  <Name>{item.label}</Name>
                 </div>
                 {item.key.includes('custom') && (
                   <Flex gap={6}>
@@ -216,6 +216,11 @@ const FormatHandler = () => {
     </>
   )
 }
+
+const Name = styled.span`
+  text-overflow: ellipsis;
+  overflow: hidden;
+`
 
 const OptionWrapper = styled.div`
   display: flex;

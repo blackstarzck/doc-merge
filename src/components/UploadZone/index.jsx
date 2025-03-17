@@ -1,10 +1,10 @@
 import { UploadOutlined } from '@ant-design/icons'
 import { message, Upload } from 'antd'
-import api from '../../api/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
+import api from '../../api/api'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { getDocument } from '../../store/document/documentSlice'
 

@@ -108,7 +108,7 @@ const TableSection = () => {
         setRowData(data)
       })
       .catch((error) => console.error('Failed to load data', error))
-  }, [])
+  }, [currentDocumentColumns, dispatch, location.pathname])
 
   const createOneDocumentRecord = useCallback(() => {
     const record = currentDocumentColumns.reduce((acc, column) => {
