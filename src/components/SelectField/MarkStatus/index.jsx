@@ -1,5 +1,5 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
+import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Tooltip, Upload } from 'antd'
 import { theme } from 'antd'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -72,12 +72,14 @@ const MarkStatus = () => {
     () => [
       {
         label: (
-          <Upload {...props}>
-            <Space style={{ width: '100%', height: 32 }}>
-              <UploadOutlined />
-              마크장비 진행현황 업로드
-            </Space>
-          </Upload>
+          <Tooltip placement="right" title="납품처를 선택해주세요">
+            <Upload disabled={true} {...props}>
+              <Space style={{ width: '100%', height: 32 }}>
+                <UploadOutlined />
+                마크장비 진행현황 업르도
+              </Space>
+            </Upload>
+          </Tooltip>
         ),
         key: 0,
       },

@@ -5,7 +5,7 @@ import { useIdsFromParams } from './useIdsFromParams'
 
 const useCurrentDocumentColumns = () => {
   const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
-  console.log({ documentId, organizationId, clientId, vendorId, markInfoId })
+
   return useMemo(() => {
     let key = null
 
@@ -20,10 +20,8 @@ const useCurrentDocumentColumns = () => {
     } else if (markInfoId) {
       key = 'mark_status'
     }
-    console.log('key: ', key)
 
     const columns = TABLE_COLUMNS.find((table) => table.key === key)?.columns
-    console.log('columns: ', columns)
     return columns
   }, [documentId, organizationId, clientId, vendorId, markInfoId])
 }

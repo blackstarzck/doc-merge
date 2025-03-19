@@ -1,10 +1,11 @@
-import { DownloadOutlined } from '@ant-design/icons'
+import { DownloadOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { Button, Flex, Popconfirm } from 'antd'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { useSetFileName } from '../../hooks/useSetFileName'
 const getAllCells = (keyCount, rowNumber = 1) => {
   const cells = []
@@ -27,6 +28,7 @@ const numberToColumnLabel = (num) => {
 }
 
 const ActionHandler = ({ columns, rowData, selected, onRemoveRows, onSave }) => {
+  const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
   const selectedFormat = useSelector((state) => state.format)
   const fileName = useSetFileName()
 
@@ -198,16 +200,23 @@ const ActionHandler = ({ columns, rowData, selected, onRemoveRows, onSave }) => 
 
   return (
     <Wrapper>
-      <Popconfirm title="삭제하시겠습니까?" onConfirm={onRemoveRows} okText="Yes" cancelText="No">
-        <Button disabled={!selected.length} size="large" danger type="text">
+      <Popconfirm
+        title="삭제하시겠습니까?"
+        description="삭제된 데이터는 불러올 수 없습니다."
+        onConfirm={onRemoveRows}
+        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+        okText="Yes"
+        cancelText="No"
+      >
+        <Button disabled={clientId || vendorId || markInfoId || !selected.length} size="large" danger type="text">
           삭제
         </Button>
       </Popconfirm>
       <Flex gap="middle">
-        <Button size="large" type="primary" onClick={onSave}>
+        <Button size="large" type="primary" disabled={clientId || vendorId || markInfoId} onClick={onSave}>
           저장
         </Button>
-        <ExcelButton disabled={!rowData.length} color="default" variant="filled" icon={<DownloadOutlined />} size="large" onClick={downloadExcel}>
+        <ExcelButton disabled={rowData.length === 0} color="default" variant="filled" icon={<DownloadOutlined />} size="large" onClick={downloadExcel}>
           Excel 다운로드
         </ExcelButton>
       </Flex>

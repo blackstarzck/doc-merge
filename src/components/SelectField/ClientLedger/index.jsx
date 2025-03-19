@@ -1,19 +1,21 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
+import { App, Button, ConfigProvider, Dropdown, Flex, Select, Space, Upload } from 'antd'
 import { theme } from 'antd'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import api from '../../../api/api'
 import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
 import { createClient, getAllClient, selectAllClient, updateClient } from '../../../store/client/clientSlice'
+import { getDocument } from '../../../store/document/documentSlice'
 import RegisterModal from '../../RegisterModal'
 
 const { useToken } = theme
 
 const ClientLedger = () => {
+  const location = useLocation()
   const { clientId } = useIdsFromParams()
   const clients = useSelector(selectAllClient) || []
   const dispatch = useDispatch()
@@ -31,7 +33,7 @@ const ClientLedger = () => {
       name: 'file',
       multiple: false,
       accept: '.xlsx, .xls',
-      showUploadList: true,
+      showUploadList: false,
       beforeUpload: (file) => {
         const isExcel =
           file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -47,35 +49,40 @@ const ClientLedger = () => {
         return true
       },
       customRequest: async ({ file, onSuccess, onError }) => {
-        const url = `${import.meta.env.VITE_API_URL}/upload/client`
-        const header = { 'Content-Type': 'multipart/form-data' }
         const formData = new FormData()
-        formData.append('file', file)
-        try {
-          const response = await api.post(url, {}, header).then((res) => res)
 
-          console.log('response: ', response)
+        formData.append('file', file)
+
+        try {
+          const response = await api
+            .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+            .then((res) => {
+              console.log('[1] response: ', res)
+              dispatch(getDocument(location.pathname))
+              .then(res => console.log("post 성공 후 getDocument 결과: ", res))
+              return res
+            })
+
+          console.log('[2] response: ', response)
 
           message.open({ type: 'success', content: '파일 업로드 성공!' })
-          onSuccess(response.data)
         } catch (error) {
           console.log('error: ', error)
           message.open({ type: 'error', content: '파일 업로드 실패.' })
-          onError(error)
         }
       },
       onDrop(e) {},
     }),
-    []
+    [clientId]
   )
   const items = useMemo(
     () => [
       {
         label: (
-          <Upload {...props}>
+          <Upload disabled={clientId ? false : true} {...props}>
             <Space style={{ width: '100%', height: 32 }}>
               <UploadOutlined />
-              매입처 원장 업로드
+              매출처 원장 업로드
             </Space>
           </Upload>
         ),
@@ -94,7 +101,7 @@ const ClientLedger = () => {
         key: 1,
       },
     ],
-    []
+    [clientId]
   )
 
   const onClickOpenModal = useCallback((data) => {
@@ -180,7 +187,7 @@ const ClientLedger = () => {
   return (
     <>
       <Space wrap size="small">
-        <span>매입처 원장</span>
+        <span>매출처 원장</span>
         <ConfigProvider
           theme={{
             components: {
@@ -195,7 +202,7 @@ const ClientLedger = () => {
               open={dropdownOpen}
               value={clientId || undefined}
               showSearch
-              placeholder="매입처 원장을 선택해주세요"
+              placeholder="매출처 원장을 선택해주세요"
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
               optionFilterProp="name"
               optionLabelProp="name"
@@ -211,7 +218,7 @@ const ClientLedger = () => {
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal modal={modal} setModal={setModal} subTitle="매입처 원장" table="client" handleCreate={handleCreate} handleUpdate={handleUpdate} />
+      <RegisterModal modal={modal} setModal={setModal} subTitle="매출처 원장" table="client" handleCreate={handleCreate} handleUpdate={handleUpdate} />
     </>
   )
 }

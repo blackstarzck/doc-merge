@@ -58,8 +58,6 @@ export const clientSlice = createSlice({
   },
 })
 
-export const { updateClientById } = clientSlice.actions
-
 // Selectors
 export const { selectAll: selectAllClient, selectById: selectClientById, selectIds: selectClientIds } = infoAdapter.getSelectors((state) => state.client)
 

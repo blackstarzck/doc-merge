@@ -1,5 +1,5 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Upload } from 'antd'
+import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Tooltip, Upload } from 'antd'
 import { theme } from 'antd'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -8,6 +8,7 @@ import styled from 'styled-components'
 
 import api from '../../../api/api'
 import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
+import { getDocument } from '../../../store/document/documentSlice'
 import { createVendor, getAllVendor, selectAllVendor, updateVendor } from '../../../store/vendor/vendorSlice'
 import RegisterModal from '../../RegisterModal'
 
@@ -31,7 +32,7 @@ const VendorLedger = () => {
       name: 'file',
       multiple: false,
       accept: '.xlsx, .xls',
-      showUploadList: true,
+      showUploadList: false,
       beforeUpload: (file) => {
         const isExcel =
           file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -47,21 +48,25 @@ const VendorLedger = () => {
         return true
       },
       customRequest: async ({ file, onSuccess, onError }) => {
-        const url = `${import.meta.env.VITE_API_URL}/upload/vendor`
-        const header = { 'Content-Type': 'multipart/form-data' }
         const formData = new FormData()
-        formData.append('file', file)
-        try {
-          const response = await api.post(url, {}, header).then((res) => res)
 
-          console.log('response: ', response)
+        formData.append('file', file)
+
+        try {
+          const response = await api
+            .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+            .then((res) => {
+              console.log('[1] response: ', res)
+              dispatch(getDocument(location.pathname))
+              return res
+            })
+
+          console.log('[2] response: ', response)
 
           message.open({ type: 'success', content: '파일 업로드 성공!' })
-          onSuccess(response.data)
         } catch (error) {
           console.log('error: ', error)
           message.open({ type: 'error', content: '파일 업로드 실패.' })
-          onError(error)
         }
       },
       onDrop(e) {},
@@ -72,10 +77,10 @@ const VendorLedger = () => {
     () => [
       {
         label: (
-          <Upload {...props}>
+          <Upload disabled={vendorId ? false : true} {...props}>
             <Space style={{ width: '100%', height: 32 }}>
               <UploadOutlined />
-              매출처 원장 업로드
+              매입처 원장 업로드
             </Space>
           </Upload>
         ),
@@ -94,7 +99,7 @@ const VendorLedger = () => {
         key: 1,
       },
     ],
-    []
+    [vendorId]
   )
 
   const onClickOpenModal = useCallback((data) => {
@@ -180,7 +185,7 @@ const VendorLedger = () => {
   return (
     <>
       <Space wrap size="small">
-        <span>매출처 원장</span>
+        <span>매입처 원장</span>
         <ConfigProvider
           theme={{
             components: {
@@ -195,7 +200,7 @@ const VendorLedger = () => {
               open={dropdownOpen}
               value={vendorId || undefined}
               showSearch
-              placeholder="매출처 원장을 선택해주세요"
+              placeholder="매입처 원장을 선택해주세요"
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
               optionFilterProp="name"
               optionLabelProp="name"
@@ -211,7 +216,7 @@ const VendorLedger = () => {
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal modal={modal} setModal={setModal} subTitle="매출처 원장" table="vendor" handleCreate={handleCreate} handleUpdate={handleUpdate} />
+      <RegisterModal modal={modal} setModal={setModal} subTitle="매입처 원장" table="vendor" handleCreate={handleCreate} handleUpdate={handleUpdate} />
     </>
   )
 }

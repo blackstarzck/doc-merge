@@ -7,10 +7,10 @@ export const useIdsFromParams = () => {
   return useMemo(() => {
     return {
       documentId,
-      organizationId: parseInt(organizationId),
-      clientId: parseInt(clientId),
-      vendorId: parseInt(vendorId),
-      markInfoId: parseInt(markInfoId),
+      organizationId: organizationId ? parseInt(organizationId) : null,
+      clientId: clientId ? parseInt(clientId) : null,
+      vendorId: vendorId ? parseInt(vendorId) : null,
+      markInfoId: markInfoId ? parseInt(markInfoId) : null,
     }
   }, [documentId, organizationId, clientId, vendorId, markInfoId]) // 생략 가능
 }

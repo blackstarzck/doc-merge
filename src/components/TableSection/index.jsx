@@ -1,6 +1,6 @@
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
-import { Button, message } from 'antd'
+import { Button, message, notification } from 'antd'
 import { DateTime } from 'luxon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,8 +9,12 @@ import styled from 'styled-components'
 
 import useCurrentDocumentColumns from '../../hooks/useCurrentDocumentColumns'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import { selectAllClient } from '../../store/client/clientSlice'
+import { postClientLedger } from '../../store/clientLedger/clientLedgerSlice'
 import { deleteDocument, getDocument, postDocument, selectAllDocuments } from '../../store/document/documentSlice'
 import { selectOrganizationById } from '../../store/organization/organizationSlice'
+import { selectAllVendor } from '../../store/vendor/vendorSlice'
+import { postVendorLedger } from '../../store/vendorLedger/vendorLedgerSlice'
 import ActionHandler from '../ActionHandler'
 
 const myTheme = themeQuartz.withParams({
@@ -29,7 +33,7 @@ const dateFormatter = (value) => {
 }
 
 const TableSection = () => {
-  const { documentId, organizationId } = useIdsFromParams()
+  const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
   const location = useLocation()
   const currentDocumentColumns = useCurrentDocumentColumns()
   const dispatch = useDispatch()
@@ -37,78 +41,131 @@ const TableSection = () => {
   const [rowData, setRowData] = useState([])
   const [columnDefs, setColumnDefs] = useState([])
   const [selected, setSelectedRows] = useState([])
+  const [loading, setLoading] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
-  const { loading: getLoading, error: getError } = useSelector((state) => state.document.get)
-  const { loading: postLoading, error: postError } = useSelector((state) => state.document.post)
-  const { loading: deleteLoading, error: deleteError } = useSelector((state) => state.document.delete)
+  const clients = useSelector(selectAllClient)
+  const vendors = useSelector(selectAllVendor)
   const document = useSelector(selectAllDocuments)
   const org = useSelector((state) => (organizationId ? selectOrganizationById(state, organizationId) : null))
   const count = useRef(0)
-  const theme = useMemo(() => {
-    return myTheme
-  }, [])
+  const theme = useMemo(() => myTheme, [])
+  const access = useSelector((state) => state.access.code)
+  const [api, notificationContextHolder] = notification.useNotification()
 
   const defaultColDef = useMemo(
     () => ({
       editable: true,
       enableCellChangeFlash: true,
       filter: true,
+      sortable: false,
     }),
     []
   )
 
-  useEffect(() => {
-    setColumnDefs(
-      currentDocumentColumns.map((column) => {
-        return {
-          field: column.key,
-          headerName: column.name,
-          hide: column.hide,
-          cellDataType: column.type,
-          cellEditor: column.key === 'notes' ? 'agLargeTextCellEditor' : null,
-          cellEditorPopup: column.key === 'notes',
-          editable: column.editable,
-          suppressNavigable: column.suppressNavigable,
-          tooltipValueGetter: (p) => (p.value ? (column.calc ? `${column.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
-          valueFormatter: (params) => {
-            if (column.type === 'number' && params.value) {
-              return numberFormatter(params.value)
-            }
-            if (column.type === 'date' && params.value) {
-              return dateFormatter(params.value)
-            }
-            if (!params.value) {
-              return ''
-            }
-          },
+  const setCellEditorForAgGrid = (key) => {
+    const cellEditorMap = {}
+    let values = []
+    switch (key) {
+      case 'admin_contact':
+      case 'lib_contact':
+      case 'notes':
+        cellEditorMap.cellEditor = 'agLargeTextCellEditor'
+        cellEditorMap.cellEditorPopup = true
+        cellEditorMap.cellEditorParams = {
+          rows: 3,
         }
-      })
+        break
+      case 'outsourcing_company':
+        values = vendors.map((item) => item.name)
+        cellEditorMap.cellEditor = 'agSelectCellEditor'
+        cellEditorMap.cellEditorParams = { values: [...values, '없음'] }
+        break
+      case 'parent_company':
+        values = clients.map((item) => item.name)
+        cellEditorMap.cellEditor = 'agSelectCellEditor'
+        cellEditorMap.cellEditorParams = { values: [...values, '없음'] }
+        break
+      default:
+        cellEditorMap.cellEditor = null
+        break
+    }
+    return cellEditorMap
+  }
+
+  useEffect(() => {
+    setColumnDefs(() =>
+      currentDocumentColumns.map((column) => ({
+        width: column.width || null,
+        field: column.key,
+        headerName: column.name,
+        hide: column.hide,
+        cellDataType: column.type,
+        editable: clientId || vendorId || markInfoId || column.editable,
+        suppressNavigable: column.suppressNavigable,
+        tooltipValueGetter: (p) => (p.value ? (column.calc ? `${column.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
+        valueFormatter: (params) => {
+          if (column.type === 'number' && params.value) {
+            return numberFormatter(params.value)
+          }
+          if (column.type === 'date' && params.value) {
+            return dateFormatter(params.value)
+          }
+          if (!params.value) {
+            return ''
+          }
+        },
+      }))
     )
   }, [currentDocumentColumns])
 
   useEffect(() => {
-    const copy = structuredClone(document)
-    setRowData(copy)
-  }, [document])
+    setColumnDefs((prevCol) =>
+      prevCol.map((col) => {
+        let cell = setCellEditorForAgGrid(col.field)
+        if (col.cellDataType === 'date') cell = { ...cell, cellEditor: 'agDateCellEditor' }
+
+        return {
+          ...col,
+          ...cell,
+        }
+      })
+    )
+  }, [vendors, clients, documentId, organizationId, clientId, vendorId, markInfoId])
 
   useEffect(() => {
+    console.log('columnDefs: ', columnDefs)
     count.current = 0 // 초기화
+    setLoading(true)
     dispatch(getDocument(location.pathname))
       .then((res) => {
         const data = res.payload ? structuredClone(res.payload) : []
         const dateTypesColumns = currentDocumentColumns.filter((item) => item.type === 'date').map((item) => item.key)
-
-        data.map((item) => {
-          dateTypesColumns.forEach((column) => {
-            item[column] = item[column] ? new Date(item[column]) : null
+        console.log('data: ', data)
+        setRowData(() =>
+          data.map((item) => {
+            dateTypesColumns.forEach((column) => {
+              item[column] = item[column] ? new Date(item[column]) : null
+            })
+            return item
           })
-          return item
-        })
-
-        setRowData(data)
+        )
       })
       .catch((error) => console.error('Failed to load data', error))
-  }, [currentDocumentColumns, dispatch, location.pathname])
+      .finally(() => setLoading(false))
+  }, [documentId, organizationId, clientId, vendorId, markInfoId])
+
+  useEffect(() => {
+    console.log("document 업데이트됨!!! 테이블 새로 만듬: ", document)
+    if (document.length > 0) {
+      const copy = structuredClone(document)
+      setRowData(() =>
+        copy.map((item) => {
+          if (!item.outsourcing_company) item.outsourcing_company = '없음'
+          return item
+        })
+      )
+    }
+  }, [document])
 
   const createOneDocumentRecord = useCallback(() => {
     const record = currentDocumentColumns.reduce((acc, column) => {
@@ -116,7 +173,7 @@ const TableSection = () => {
       return acc
     }, {})
     return record
-  }, [currentDocumentColumns])
+  }, [document])
 
   const onAddRow = () => {
     const newRecord = createOneDocumentRecord()
@@ -129,14 +186,40 @@ const TableSection = () => {
 
     console.log('newRecord: ', newRecord)
     gridRef.current.api.applyTransaction({ add: [newRecord] })
+
+    // 추가된 행으로 스크롤 이동
+    const rowCount = gridRef.current.api.getDisplayedRowCount()
+    if (rowCount > 0) {
+      gridRef.current.api.ensureIndexVisible(rowCount - 1, 'bottom')
+    }
   }
 
   const onRemoveRows = () => {
+    if (!access) {
+      api.error({
+        placement: 'top',
+        message: '권한코드가 일치하지 않습니다.',
+        description: '권한코드를 확인해주세요.',
+      })
+      return
+    }
+
     const selectedNodes = gridRef.current.api.getSelectedNodes()
     const selecteDatas = selectedNodes.map((node) => node.data)
 
-    const ids = selecteDatas.filter((data) => typeof data.id === 'number').map((data) => data.id)
+    const recordedData = selecteDatas.filter((data) => typeof data.id === 'number')
+    const ids = recordedData.map((data) => data.id)
 
+    // 데이터베이스에 저장되지 않은, 화면에 row만 추가된 데이터 삭제
+    selecteDatas.forEach((data) => {
+      if (typeof data.id !== 'number') {
+        gridRef.current.api.applyTransaction({ remove: [data] })
+      }
+    })
+
+    // 삭제할 데이터가 없으면 리턴
+    if (ids.length === 0) return
+    setLoading(true)
     dispatch(deleteDocument({ path: location.pathname, ids }))
       .then((res) => {
         console.log('After delete data', res)
@@ -152,7 +235,7 @@ const TableSection = () => {
           messageApi.open({ type: 'success', content: '삭제되었습니다.' })
         }
 
-        gridRef.current.api.applyTransaction({ remove: selecteDatas })
+        gridRef.current.api.applyTransaction({ remove: recordedData })
       })
       .catch((error) => {
         console.log('delete error: ', error)
@@ -161,6 +244,7 @@ const TableSection = () => {
           content: `삭제를 실패하였습니다.`,
         })
       })
+      .finally(() => setLoading(false))
   }
 
   const onCellValueChanged = useCallback((event) => {
@@ -177,7 +261,8 @@ const TableSection = () => {
   }, [])
 
   const onSave = () => {
-    const rowData = []
+    // console.table('[1] rowData: ', rowData)
+    const newData = []
     const editingCells = gridRef.current.api.getEditingCells()
 
     if (editingCells.length > 0) {
@@ -205,39 +290,92 @@ const TableSection = () => {
       }
       // -1은 id를 제외한 필드의 개수
       if (cnt <= Object.keys(node.data).length - 1) {
-        delete node.data.id
-        rowData.push(node.data)
+        // delete node.data.id
+        newData.push(node.data)
       }
     })
-    dispatch(
-      postDocument({
-        path: location.pathname,
-        document: rowData,
-      })
-    )
-      .then((res) => {
-        if (res.type.includes('rejected')) {
-          console.log('rejected: ', res)
-          messageApi.open({
-            type: 'error',
-            content: `저장을 실패하였습니다. 콘솔로그를 확인해주세요.`,
-          })
-        } else {
-          const copy = structuredClone(res.payload)
-          setRowData(copy)
-          console.log('after success : ', res)
-          gridRef.current.api.deselectAll()
-          messageApi.open({ type: 'success', content: '저장되었습니다.' })
-        }
-      })
-      .catch((error) => {
-        console.log('post error: ', error)
-        messageApi.open({
-          type: 'error',
-          content: `저장을 실패하였습니다. 콘솔로그를 확인해주세요.`,
+
+    // console.log('[2] newData: ', newData)
+
+    // [1] 도서납품현황 저장
+    if (organizationId || documentId) {
+      setLoading(true)
+      dispatch(
+        postDocument({
+          path: location.pathname,
+          document: newData,
         })
+      )
+        .then((res) => {
+          if (res.type.includes('rejected')) {
+            console.log('postDocument rejected: ', res)
+          } else {
+            console.log('after postDocument success : ', res)
+
+            const copy = structuredClone(res.payload)
+            setRowData((prev) => ({ ...prev, ...copy }))
+            gridRef.current.api.deselectAll()
+            messageApi.open({ type: 'success', content: '삭제되었습니다.' })
+          }
+        })
+        .catch((error) => {
+          console.log('postDocument error: ', error)
+        })
+        .finally(() => {
+          setSelectedRows([])
+          setLoading(false)
+        })
+    }
+
+    // [2] 매입처(client_ledger) 저장
+    if (organizationId || documentId || clientId) {
+      let cLedger = newData.filter((data) => data.parent_company)
+      cLedger.map((data) => {
+        if (typeof data.id !== 'number') delete data.id
+        return data
       })
-      .finally(() => setSelectedRows([]))
+      console.log('cLedger: ', cLedger)
+      dispatch(postClientLedger(cLedger))
+        .then((res) => {
+          if (res.type.includes('rejected')) {
+            console.log('postClientLedger rejected: ', res)
+          } else {
+            const copy = structuredClone(res.payload)
+            console.log('after postClientLedger success : ', res)
+
+            setRowData((prev) => ({ ...prev, ...copy }))
+            gridRef.current.api.deselectAll()
+          }
+        })
+        .catch((error) => {
+          console.log('post postClientLedger error: ', error)
+        })
+    }
+
+    // [2] 매출처(vendor_ledger) 저장
+    if (organizationId || documentId || vendorId) {
+      const vLedger = newData.filter((data) => !data.outsourcing_company || data.outsourcing_company !== '없음')
+      vLedger.map((data) => {
+        if (typeof data.id !== 'number') delete data.id
+        return data
+      })
+      console.log('vLedger: ', vLedger)
+      dispatch(postVendorLedger(vLedger))
+        .then((res) => {
+          if (res.type.includes('rejected')) {
+            console.log('postVendorLedger rejected: ', res)
+          } else {
+            const copy = structuredClone(res.payload)
+            console.log('after postVendorLedger success : ', res)
+
+            setRowData((prev) => ({ ...prev, ...copy }))
+            gridRef.current.api.deselectAll()
+          }
+        })
+        .catch((error) => {
+          console.log('post postVendorLedger error: ', error)
+        })
+    }
   }
 
   const getRowId = useCallback((params) => {
@@ -246,15 +384,21 @@ const TableSection = () => {
 
   return (
     <Wrapper>
+      {notificationContextHolder}
       <AgGridReact
         theme={theme}
-        loading={getLoading || postLoading || deleteLoading}
+        loading={loading}
         getRowId={getRowId}
         ref={gridRef}
         rowData={rowData}
         columnDefs={columnDefs}
         rowSelection={{
-          mode: 'multiRow',
+          mode: clientId || vendorId || markInfoId ? null : 'multiRow',
+        }}
+        rowClassRules={{
+          'rag-amber-outer': (params) => {
+            return params.data.b_close_status
+          },
         }}
         defaultColDef={defaultColDef}
         resetRowDataOnUpdate={true}
@@ -264,7 +408,7 @@ const TableSection = () => {
         tooltipShowDelay={500}
         // onGridReady={onGridReady}
       />
-      <ButtonWrapper size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
+      <ButtonWrapper disabled={clientId || vendorId || markInfoId} size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
         Add a row +
       </ButtonWrapper>
       {contextHolder}
@@ -281,6 +425,10 @@ const Wrapper = styled.div`
   gap: 18px;
   flex-direction: column;
   height: 100%;
+
+  & .rag-amber-outer {
+    background-color: #d1eeff;
+  }
 `
 
 const ButtonWrapper = styled(Button)`

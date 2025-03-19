@@ -1,20 +1,19 @@
 import { UploadOutlined } from '@ant-design/icons'
-import { message, Upload } from 'antd'
-import { useDispatch, useSelector } from 'react-redux'
+import { message, Typography, Upload } from 'antd'
+import { useDispatch } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import api from '../../api/api'
-import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { getDocument } from '../../store/document/documentSlice'
+
+const { Text } = Typography
 
 const { Dragger } = Upload
 
 const UploadZone = () => {
-  const { documentId, organizationId } = useIdsFromParams()
   const location = useLocation()
   const [messageApi, contextHolder] = message.useMessage()
-  const { loading, error } = useSelector((state) => state.document.post)
   const dispatch = useDispatch()
   const props = {
     name: 'file',
@@ -46,13 +45,24 @@ const UploadZone = () => {
           .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
           .then((res) => {
             dispatch(getDocument(location.pathname))
+              .then((res) => {
+                if (res.type.includes('fulfilled')) {
+                  messageApi.open({ type: 'success', content: '파일 업로드 성공!' })
+                  onSuccess(response.data) // UI 업데이트
+                } else {
+                  messageApi.open({ type: 'error', content: '파일 업로드 실패.' })
+                  onError() // UI 업데이트
+                }
+              })
+              .catch((error) => {
+                messageApi.open({ type: 'error', content: '파일 업로드 실패.' })
+                onError() // UI 업데이트
+              })
+
             return res
           })
 
         console.log('response: ', response)
-
-        messageApi.open({ type: 'success', content: '파일 업로드 성공!' })
-        onSuccess(response.data) // UI 업데이트
       } catch (error) {
         console.log('error: ', error)
         messageApi.open({ type: 'error', content: '파일 업로드 실패.' })
@@ -65,6 +75,7 @@ const UploadZone = () => {
   return (
     <Wrapper>
       {contextHolder}
+      <span style={{ color: '#b4b4b4', fontSize: 12 }}>※ 파일 첫 행에 헤더를 넣어주세요.</span>
       <UploadWrapper {...props}>
         <InnerWrapper>
           <UploadOutlined className="!text-gray-400" />
