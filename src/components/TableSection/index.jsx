@@ -1,6 +1,6 @@
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
-import { Button, message, notification } from 'antd'
+import { Button, Dropdown, message, notification } from 'antd'
 import { DateTime } from 'luxon'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -15,6 +15,7 @@ import { deleteDocument, getDocument, postDocument, selectAllDocuments } from '.
 import { selectOrganizationById } from '../../store/organization/organizationSlice'
 import { selectAllVendor } from '../../store/vendor/vendorSlice'
 import { postVendorLedger } from '../../store/vendorLedger/vendorLedgerSlice'
+import { calculateEquation } from '../../utils/excel.util'
 import ActionHandler from '../ActionHandler'
 
 const myTheme = themeQuartz.withParams({
@@ -91,6 +92,7 @@ const TableSection = () => {
     }
     return cellEditorMap
   }
+  
 
   useEffect(() => {
     setColumnDefs(() =>
@@ -104,7 +106,11 @@ const TableSection = () => {
         suppressNavigable: column.suppressNavigable,
         tooltipValueGetter: (p) => (p.value ? (column.calc ? `${column.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
         valueFormatter: (params) => {
+          if(params.colDef.cellDataType === "string" && params.value.startsWith("=")){
+            return calculateEquation(params.value.replace("=", ""), params.data, currentDocumentColumns)
+          }
           if (column.type === 'number' && params.value) {
+            console.log("params.value: ", params.value)
             return numberFormatter(params.value)
           }
           if (column.type === 'date' && params.value) {
@@ -261,7 +267,6 @@ const TableSection = () => {
   }, [])
 
   const onSave = () => {
-    // console.table('[1] rowData: ', rowData)
     const newData = []
     const editingCells = gridRef.current.api.getEditingCells()
 
@@ -297,7 +302,7 @@ const TableSection = () => {
 
     // console.log('[2] newData: ', newData)
 
-    // [1] 도서납품현황 저장
+    // [1] 일반적인 저장
     if (organizationId || documentId) {
       setLoading(true)
       dispatch(
@@ -315,7 +320,7 @@ const TableSection = () => {
             const copy = structuredClone(res.payload)
             setRowData((prev) => ({ ...prev, ...copy }))
             gridRef.current.api.deselectAll()
-            messageApi.open({ type: 'success', content: '삭제되었습니다.' })
+            messageApi.open({ type: 'success', content: '저장되었습니다.' })
           }
         })
         .catch((error) => {
@@ -327,12 +332,16 @@ const TableSection = () => {
         })
     }
 
-    // [2] 매입처(client_ledger) 저장
-    if (organizationId || documentId || clientId) {
-      let cLedger = newData.filter((data) => data.parent_company)
+    /**
+     * [2] 매입처(client_ledger) 저장
+     * postClientLedger 가 book_delivery & client_ledger 저장 (서버쪽 코드 확인)
+     */
+    if (documentId === 'book_delivery') {
+      let cLedger = newData.filter((data) => data.parent_company && (data.continue_type && data.continue_type.startsWith("연간")))
       cLedger.map((data) => {
         if (typeof data.id !== 'number') delete data.id
-        return data
+        const cliendId = data.parent_company_id && clients.find((client) => client.name === data.parent_company)?.id
+        return { ...data, parent_company_id: cliendId }
       })
       console.log('cLedger: ', cLedger)
       dispatch(postClientLedger(cLedger))
@@ -353,29 +362,29 @@ const TableSection = () => {
     }
 
     // [2] 매출처(vendor_ledger) 저장
-    if (organizationId || documentId || vendorId) {
-      const vLedger = newData.filter((data) => !data.outsourcing_company || data.outsourcing_company !== '없음')
-      vLedger.map((data) => {
-        if (typeof data.id !== 'number') delete data.id
-        return data
-      })
-      console.log('vLedger: ', vLedger)
-      dispatch(postVendorLedger(vLedger))
-        .then((res) => {
-          if (res.type.includes('rejected')) {
-            console.log('postVendorLedger rejected: ', res)
-          } else {
-            const copy = structuredClone(res.payload)
-            console.log('after postVendorLedger success : ', res)
+    // if (documentId === 'book_delivery') {
+    //   const vLedger = newData.filter((data) => !data.outsourcing_company || data.outsourcing_company !== '없음')
+    //   vLedger.map((data) => {
+    //     if (typeof data.id !== 'number') delete data.id
+    //     return data
+    //   })
+    //   console.log('vLedger: ', vLedger)
+    //   dispatch(postVendorLedger(vLedger))
+    //     .then((res) => {
+    //       if (res.type.includes('rejected')) {
+    //         console.log('postVendorLedger rejected: ', res)
+    //       } else {
+    //         const copy = structuredClone(res.payload)
+    //         console.log('after postVendorLedger success : ', res)
 
-            setRowData((prev) => ({ ...prev, ...copy }))
-            gridRef.current.api.deselectAll()
-          }
-        })
-        .catch((error) => {
-          console.log('post postVendorLedger error: ', error)
-        })
-    }
+    //         setRowData((prev) => ({ ...prev, ...copy }))
+    //         gridRef.current.api.deselectAll()
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.log('post postVendorLedger error: ', error)
+    //     })
+    // }
   }
 
   const getRowId = useCallback((params) => {
@@ -385,29 +394,31 @@ const TableSection = () => {
   return (
     <Wrapper>
       {notificationContextHolder}
-      <AgGridReact
-        theme={theme}
-        loading={loading}
-        getRowId={getRowId}
-        ref={gridRef}
-        rowData={rowData}
-        columnDefs={columnDefs}
-        rowSelection={{
-          mode: clientId || vendorId || markInfoId ? null : 'multiRow',
-        }}
-        rowClassRules={{
-          'rag-amber-outer': (params) => {
-            return params.data.b_close_status
-          },
-        }}
-        defaultColDef={defaultColDef}
-        resetRowDataOnUpdate={true}
-        animateRows={true}
-        onCellValueChanged={onCellValueChanged}
-        onSelectionChanged={onRowSelected}
-        tooltipShowDelay={500}
-        // onGridReady={onGridReady}
-      />
+
+        <AgGridReact
+          theme={theme}
+          loading={loading}
+          getRowId={getRowId}
+          ref={gridRef}
+          rowData={rowData}
+          columnDefs={columnDefs}
+          rowSelection={{
+            mode: clientId || vendorId || markInfoId ? null : 'multiRow',
+          }}
+          rowClassRules={{
+            'rag-amber-outer': (params) => {
+              return params.data.b_close_status
+            },
+          }}
+          defaultColDef={defaultColDef}
+          resetRowDataOnUpdate={true}
+          animateRows={true}
+          onCellValueChanged={onCellValueChanged}
+          onSelectionChanged={onRowSelected}
+          tooltipShowDelay={500}
+          // onGridReady={onGridReady}
+        />
+
       <ButtonWrapper disabled={clientId || vendorId || markInfoId} size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
         Add a row +
       </ButtonWrapper>

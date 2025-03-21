@@ -1,63 +1,31 @@
 import { evaluate } from "mathjs";
 
-/**
- * 산식 계산 함수
- */
-const EXCEL_JS_FUNCTION_MAP = {
-  // JavaScript Math와 직접 매핑
-  floor: "Math.floor",
-  ceil: "Math.ceil",
-  round: "Math.round",
-  abs: "Math.abs",
-  min: "Math.min",
-  max: "Math.max",
-  pow: "Math.pow",
-  sqrt: "Math.sqrt",
-  // 엑셀 함수와의 매핑 (필요 시 확장)
-  ROUND: "Math.round",
-  CEILING: "Math.ceil",
-  FLOOR: "Math.floor",
-  ABS: "Math.abs",
-};
-
-const extractKeywords = (equation) => {
-  // 함수 이름과 인자 분리 (예: "round(x, 2)" → "round"과 "x, 2")
-  const functionRegex = /^([a-zA-Z]+)\((.+)\)$/;
-  const match = equation.match(functionRegex);
-
-  if (!match) return [];
-
-  const funcName = match[1]; // "floor", "round" 등
-  const innerExpression = match[2]; // "bk_price + m_supply_total_price - pre_payment - balance"
-
-  // 연산자와 숫자(인자) 제외하고 변수 이름만 추출
-  const parts = innerExpression
-    .split(/[\s]*(?:[-+*/()]|,\s*\d+\s*|\d+\s*,)[\s]*/) // 연산자, 괄호, 숫자 인자 분리
-    .map((part) => part.trim())
-    .filter(
-      (part) =>
-        part.length > 0 && // 빈 문자열 제외
-        !/^\d+$/.test(part) && // 숫자 제외
-        !Object.keys(EXCEL_JS_FUNCTION_MAP).includes(part) // 함수 이름 제외
-    );
-
-  return parts;
-};
-
-const calculateEquation = (equation, data) => {
-  console.log("equation: ", equation);
-  const keywords = extractKeywords(equation);
-  const newData = {};
-  keywords.forEach((key) => {
-    newData[key] = data[key] ?? 0; // null/undefined 처리
-  });
-  console.log("newData: ", newData);
+// 수식 계산 함수
+export const calculateEquation = (equation, data, columns) => {
   try {
-    return evaluate(equation, newData);
+    // 컬럼 이름과 키 매핑 생성
+    const columnMap = new Map(columns.map(col => [col.name, col.key]));
+
+    // 수식에서 한글 이름을 영어 키로 변환
+    let parsedEquation = equation;
+
+    columnMap.forEach((key, name) => {
+      // 공백을 포함한 유연한 매칭
+      const regex = new RegExp(`(?<=^|\\s|[+\\-*/()])${name}(?=\\s|[+\\-*/()]|$)`, 'g');
+      parsedEquation = parsedEquation.replace(regex, `data.${key}`);
+    });
+
+    // 공백 정리 (연속 공백을 단일 공백으로)
+    parsedEquation = parsedEquation.replace(/\s+/g, ' ').trim();
+    console.log('변환된 수식:', parsedEquation);
+
+    // 데이터 객체를 스코프로 전달하여 mathjs로 평가
+    const scope = { data };
+    const result = evaluate(parsedEquation, scope);
+
+    return result.toLocaleString('en-US');
   } catch (error) {
-    console.error("Evaluation error:", error);
-    return 0;
+    console.error('수식 계산 오류:', error.message);
+    return '';
   }
 };
-
-export const setFirstColum = () => {};
