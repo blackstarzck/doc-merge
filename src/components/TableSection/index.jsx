@@ -1,12 +1,16 @@
+import './styles.css'
+
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
-import { Button, Dropdown, message, notification } from 'antd'
+import { Button, message, notification } from 'antd'
 import { DateTime } from 'luxon'
+import { row } from 'mathjs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { TABLE_COLUMNS } from '../../constants/tables'
 import useCurrentDocumentColumns from '../../hooks/useCurrentDocumentColumns'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { selectAllClient } from '../../store/client/clientSlice'
@@ -92,38 +96,66 @@ const TableSection = () => {
     }
     return cellEditorMap
   }
-  
 
-  useEffect(() => {
-    setColumnDefs(() =>
-      currentDocumentColumns.map((column) => ({
-        width: column.width || null,
-        field: column.key,
-        headerName: column.name,
-        hide: column.hide,
-        cellDataType: column.type,
-        editable: clientId || vendorId || markInfoId || column.editable,
-        suppressNavigable: column.suppressNavigable,
-        tooltipValueGetter: (p) => (p.value ? (column.calc ? `${column.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
+  const setColumnDefProps = useCallback(
+    (col) => {
+      return {
+        width: col.width || null,
+        field: col.key,
+        headerName: col.name,
+        hide: col.hide,
+        cellDataType: col.type,
+        editable: clientId || vendorId || markInfoId || col.editable,
+        suppressNavigable: col.suppressNavigable,
+        tooltipValueGetter: (p) => (p.value ? (col.calc ? `${col.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
         valueFormatter: (params) => {
-          if(params.colDef.cellDataType === "string" && params.value.startsWith("=")){
-            return calculateEquation(params.value.replace("=", ""), params.data, currentDocumentColumns)
+          if (params.colDef.cellDataType === 'text' && params.value && params.value.startsWith('=')) {
+            return calculateEquation(params.value.replace('=', ''), params.data, currentDocumentColumns)
           }
-          if (column.type === 'number' && params.value) {
-            console.log("params.value: ", params.value)
+          if (col.type === 'number' && params.value) {
             return numberFormatter(params.value)
           }
-          if (column.type === 'date' && params.value) {
+          if (col.type === 'date' && params.value) {
             return dateFormatter(params.value)
           }
           if (!params.value) {
             return ''
           }
         },
-      }))
-    )
+      }
+    },
+    [currentDocumentColumns]
+  )
+
+  useEffect(() => {
+    setColumnDefs(() => {
+      let colDef = currentDocumentColumns.map((col) => {
+        return setColumnDefProps(col)
+      })
+      if (documentId === 'book_delivery') {
+        const clientLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'client_ledger')?.columns
+        const vendorLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'vendor_ledger')?.columns
+        colDef = [
+          ...colDef,
+          {
+            headerName: '매출처 원장',
+            headerClass: 'client-ledger-group',
+            marryChildren: true,
+            children: clientLedgerColumns.map((col) => setColumnDefProps(col)),
+          },
+          {
+            headerName: '매입처 원장',
+            headerClass: 'vendor-ledger-group',
+            marryChildren: true,
+            children: vendorLedgerColumns.map((col) => setColumnDefProps(col)),
+          },
+        ]
+      }
+      return colDef
+    })
   }, [currentDocumentColumns])
 
+  // 비동기적인 실행이 있어 따로 useEffect로 빼둠
   useEffect(() => {
     setColumnDefs((prevCol) =>
       prevCol.map((col) => {
@@ -161,7 +193,7 @@ const TableSection = () => {
   }, [documentId, organizationId, clientId, vendorId, markInfoId])
 
   useEffect(() => {
-    console.log("document 업데이트됨!!! 테이블 새로 만듬: ", document)
+    console.log('document 업데이트됨!!! 테이블 새로 만듬: ', document)
     if (document.length > 0) {
       const copy = structuredClone(document)
       setRowData(() =>
@@ -289,6 +321,7 @@ const TableSection = () => {
     }
 
     gridRef.current.api.forEachNode((node) => {
+      console.log('node: ', node)
       let cnt = 0
       for (const key in node.data) {
         if (!node.data[key]) cnt++
@@ -300,44 +333,44 @@ const TableSection = () => {
       }
     })
 
-    // console.log('[2] newData: ', newData)
+    console.log('[2] newData: ', newData)
 
-    // [1] 일반적인 저장
-    if (organizationId || documentId) {
-      setLoading(true)
-      dispatch(
-        postDocument({
-          path: location.pathname,
-          document: newData,
-        })
-      )
-        .then((res) => {
-          if (res.type.includes('rejected')) {
-            console.log('postDocument rejected: ', res)
-          } else {
-            console.log('after postDocument success : ', res)
+    // [1] 일반적인 저장:
+    // if (documentId !== 'book_delivery') {
+    //   setLoading(true)
+    //   dispatch(
+    //     postDocument({
+    //       path: location.pathname,
+    //       document: newData,
+    //     })
+    //   )
+    //     .then((res) => {
+    //       if (res.type.includes('rejected')) {
+    //         console.log('postDocument rejected: ', res)
+    //       } else {
+    //         console.log('after postDocument success : ', res)
 
-            const copy = structuredClone(res.payload)
-            setRowData((prev) => ({ ...prev, ...copy }))
-            gridRef.current.api.deselectAll()
-            messageApi.open({ type: 'success', content: '저장되었습니다.' })
-          }
-        })
-        .catch((error) => {
-          console.log('postDocument error: ', error)
-        })
-        .finally(() => {
-          setSelectedRows([])
-          setLoading(false)
-        })
-    }
+    //         const copy = structuredClone(res.payload)
+    //         setRowData((prev) => ({ ...prev, ...copy }))
+    //         gridRef.current.api.deselectAll()
+    //         messageApi.open({ type: 'success', content: '저장되었습니다.' })
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.log('postDocument error: ', error)
+    //     })
+    //     .finally(() => {
+    //       setSelectedRows([])
+    //       setLoading(false)
+    //     })
+    // }
 
     /**
-     * [2] 매입처(client_ledger) 저장
+     * [2] 매출처(client_ledger) 저장
      * postClientLedger 가 book_delivery & client_ledger 저장 (서버쪽 코드 확인)
      */
     if (documentId === 'book_delivery') {
-      let cLedger = newData.filter((data) => data.parent_company && (data.continue_type && data.continue_type.startsWith("연간")))
+      let cLedger = newData.filter((data) => data.parent_company && data.continue_type && data.continue_type.startsWith('연간'))
       cLedger.map((data) => {
         if (typeof data.id !== 'number') delete data.id
         const cliendId = data.parent_company_id && clients.find((client) => client.name === data.parent_company)?.id
@@ -361,7 +394,7 @@ const TableSection = () => {
         })
     }
 
-    // [2] 매출처(vendor_ledger) 저장
+    // [2] 매입처(vendor_ledger) 저장
     // if (documentId === 'book_delivery') {
     //   const vLedger = newData.filter((data) => !data.outsourcing_company || data.outsourcing_company !== '없음')
     //   vLedger.map((data) => {
@@ -391,33 +424,37 @@ const TableSection = () => {
     return String(params.data.id)
   }, [])
 
+  if (rowData.length === 0) {
+    return <div>Loading...</div> // 데이터 없으면 로딩 표시
+  }
+
   return (
     <Wrapper>
       {notificationContextHolder}
 
-        <AgGridReact
-          theme={theme}
-          loading={loading}
-          getRowId={getRowId}
-          ref={gridRef}
-          rowData={rowData}
-          columnDefs={columnDefs}
-          rowSelection={{
-            mode: clientId || vendorId || markInfoId ? null : 'multiRow',
-          }}
-          rowClassRules={{
-            'rag-amber-outer': (params) => {
-              return params.data.b_close_status
-            },
-          }}
-          defaultColDef={defaultColDef}
-          resetRowDataOnUpdate={true}
-          animateRows={true}
-          onCellValueChanged={onCellValueChanged}
-          onSelectionChanged={onRowSelected}
-          tooltipShowDelay={500}
-          // onGridReady={onGridReady}
-        />
+      <AgGridReact
+        theme={theme}
+        loading={loading}
+        getRowId={getRowId}
+        ref={gridRef}
+        rowData={rowData}
+        columnDefs={columnDefs}
+        rowSelection={{
+          mode: clientId || vendorId || markInfoId ? null : 'multiRow',
+        }}
+        rowClassRules={{
+          'rag-amber-outer': (params) => {
+            return params.data.b_close_status
+          },
+        }}
+        defaultColDef={defaultColDef}
+        resetRowDataOnUpdate={true}
+        animateRows={true}
+        onCellValueChanged={onCellValueChanged}
+        onSelectionChanged={onRowSelected}
+        tooltipShowDelay={500}
+        // onGridReady={onGridReady}
+      />
 
       <ButtonWrapper disabled={clientId || vendorId || markInfoId} size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
         Add a row +

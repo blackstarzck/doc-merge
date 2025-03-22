@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { TABLE_COLUMNS } from '../constants/menu'
+import { TABLE_COLUMNS } from '../constants/tables'
 import { useIdsFromParams } from './useIdsFromParams'
 
 const useCurrentDocumentColumns = () => {

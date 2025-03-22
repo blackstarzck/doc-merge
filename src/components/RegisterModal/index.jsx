@@ -2,7 +2,7 @@ import { App, Button, Divider, Form, Input, InputNumber, Modal } from 'antd'
 import { Fragment, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 
-import { FORM_FILEDS } from '../../constants/menu'
+import { FORM_FILEDS } from '../../constants/tables'
 
 const titleMap = {
   client: {

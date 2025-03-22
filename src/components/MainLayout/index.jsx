@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { OVERVIEW_TABLES } from '../../constants/menu'
+import { OVERVIEW_TABLES } from '../../constants/tables'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { setAccessCode } from '../../store/access/accessSlice'
 import Logo from '../Logo'

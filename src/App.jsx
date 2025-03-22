@@ -2,7 +2,7 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'
 import { App as AntdApp } from 'antd'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { TABLE_COLUMNS } from './constants/menu'
+import { TABLE_COLUMNS } from './constants/tables'
 import BuilderPage from './pages/BuilderPage'
 
 ModuleRegistry.registerModules([AllCommunityModule])

@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 
-import { OVERVIEW_TABLES } from '../constants/menu'
+import { OVERVIEW_TABLES } from '../constants/tables'
 import { selectOrganizationById } from '../store/organization/organizationSlice'
 import { useIdsFromParams } from './useIdsFromParams'
 
