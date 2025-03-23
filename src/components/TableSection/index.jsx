@@ -299,7 +299,7 @@ const TableSection = () => {
   }, [])
 
   const onSave = () => {
-    const newData = []
+    let newData = []
     const editingCells = gridRef.current.api.getEditingCells()
 
     if (editingCells.length > 0) {
@@ -369,30 +369,30 @@ const TableSection = () => {
      * [2] 매출처(client_ledger) 저장
      * postClientLedger 가 book_delivery & client_ledger 저장 (서버쪽 코드 확인)
      */
-    if (documentId === 'book_delivery') {
-      let cLedger = newData.filter((data) => data.parent_company && data.continue_type && data.continue_type.startsWith('연간'))
-      cLedger.map((data) => {
-        if (typeof data.id !== 'number') delete data.id
-        const cliendId = data.parent_company_id && clients.find((client) => client.name === data.parent_company)?.id
-        return { ...data, parent_company_id: cliendId }
-      })
-      console.log('cLedger: ', cLedger)
-      dispatch(postClientLedger(cLedger))
-        .then((res) => {
-          if (res.type.includes('rejected')) {
-            console.log('postClientLedger rejected: ', res)
-          } else {
-            const copy = structuredClone(res.payload)
-            console.log('after postClientLedger success : ', res)
+    // if (documentId === 'book_delivery') {
+    //   let cLedger = newData.filter((data) => data.parent_company && data.continue_type && data.continue_type.startsWith('연간'))
+    //   cLedger.map((data) => {
+    //     if (typeof data.id !== 'number') delete data.id
+    //     const cliendId = data.parent_company_id && clients.find((client) => client.name === data.parent_company)?.id
+    //     return { ...data, parent_company_id: cliendId }
+    //   })
+    //   console.log('cLedger: ', cLedger)
+    //   dispatch(postClientLedger(cLedger))
+    //     .then((res) => {
+    //       if (res.type.includes('rejected')) {
+    //         console.log('postClientLedger rejected: ', res)
+    //       } else {
+    //         const copy = structuredClone(res.payload)
+    //         console.log('after postClientLedger success : ', res)
 
-            setRowData((prev) => ({ ...prev, ...copy }))
-            gridRef.current.api.deselectAll()
-          }
-        })
-        .catch((error) => {
-          console.log('post postClientLedger error: ', error)
-        })
-    }
+    //         setRowData((prev) => ({ ...prev, ...copy }))
+    //         gridRef.current.api.deselectAll()
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.log('post postClientLedger error: ', error)
+    //     })
+    // }
 
     // [2] 매입처(vendor_ledger) 저장
     // if (documentId === 'book_delivery') {
@@ -418,6 +418,49 @@ const TableSection = () => {
     //       console.log('post postVendorLedger error: ', error)
     //     })
     // }
+    if (documentId === 'book_delivery') {
+      newData = newData.map((row) => {
+        if (!row.parent_compay) {
+          const client = clients.find((client) => client.name === row.parent_compay)
+          row.client = client.name
+          row.client_id = client.id
+          row.parent_company_id = client.id
+        }
+        if (!row.outsourcing_company) {
+          const vendor = vendors.find((vendor) => vendor.name === row.outsourcing_company)
+          row.vendor = vendor.name
+          row.vendor_id = vendor.id
+          row.outsourcing_company_id = vendor.id
+        }
+        return row
+      })
+      setLoading(true)
+      dispatch(
+        postDocument({
+          path: location.pathname,
+          document: newData,
+        })
+      )
+        .then((res) => {
+          if (res.type.includes('rejected')) {
+            console.log('postDocument rejected: ', res)
+          } else {
+            console.log('after postDocument success : ', res)
+
+            const copy = structuredClone(res.payload)
+            setRowData((prev) => ({ ...prev, ...copy }))
+            gridRef.current.api.deselectAll()
+            messageApi.open({ type: 'success', content: '저장되었습니다.' })
+          }
+        })
+        .catch((error) => {
+          console.log('postDocument error: ', error)
+        })
+        .finally(() => {
+          setSelectedRows([])
+          setLoading(false)
+        })
+    }
   }
 
   const getRowId = useCallback((params) => {
@@ -425,7 +468,7 @@ const TableSection = () => {
   }, [])
 
   if (rowData.length === 0) {
-    return <div>Loading...</div> // 데이터 없으면 로딩 표시
+    return <div>데이터가 없습니다.</div> // 데이터 없으면 로딩 표시
   }
 
   return (
