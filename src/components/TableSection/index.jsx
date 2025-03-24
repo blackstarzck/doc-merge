@@ -2,6 +2,7 @@ import './styles.css'
 
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
+import { Empty } from 'antd';
 import { Button, message, notification } from 'antd'
 import { DateTime } from 'luxon'
 import { row } from 'mathjs'
@@ -132,25 +133,25 @@ const TableSection = () => {
       let colDef = currentDocumentColumns.map((col) => {
         return setColumnDefProps(col)
       })
-      if (documentId === 'book_delivery') {
-        const clientLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'client_ledger')?.columns
-        const vendorLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'vendor_ledger')?.columns
-        colDef = [
-          ...colDef,
-          {
-            headerName: '매출처 원장',
-            headerClass: 'client-ledger-group',
-            marryChildren: true,
-            children: clientLedgerColumns.map((col) => setColumnDefProps(col)),
-          },
-          {
-            headerName: '매입처 원장',
-            headerClass: 'vendor-ledger-group',
-            marryChildren: true,
-            children: vendorLedgerColumns.map((col) => setColumnDefProps(col)),
-          },
-        ]
-      }
+      // if (documentId === 'book_delivery') {
+      //   const clientLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'client_ledger')?.columns
+      //   const vendorLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'vendor_ledger')?.columns
+      //   colDef = [
+      //     ...colDef,
+      //     {
+      //       headerName: '매출처 원장',
+      //       headerClass: 'client-ledger-group',
+      //       marryChildren: true,
+      //       children: clientLedgerColumns.map((col) => setColumnDefProps(col)),
+      //     },
+      //     {
+      //       headerName: '매입처 원장',
+      //       headerClass: 'vendor-ledger-group',
+      //       marryChildren: true,
+      //       children: vendorLedgerColumns.map((col) => setColumnDefProps(col)),
+      //     },
+      //   ]
+      // }
       return colDef
     })
   }, [currentDocumentColumns])
@@ -335,6 +336,52 @@ const TableSection = () => {
 
     console.log('[2] newData: ', newData)
 
+
+    let ledger = newData.filter((data) => data.continue_type && !data.continue_type.startsWith('연간'))
+    ledger = ledger.map((data) => {
+      if (typeof data.id !== 'number') delete data.id
+      if(!data.parent_company_id && (data.parent_company && data.parent_company !== '없음')){
+        const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company);
+
+        data.client = client?.name || data.parent_company
+        data.client_id = client?.id
+        data.parent_company_id = client?.id
+      }
+      if(!data.outsourcing_company_id && (data.outsourcing_company && data.outsourcing_company !== '없음')){
+        const vendor = data.outsourcing_company_id || vendors.find((vendor) => vendor.name === data.outsourcing_company)
+        data.vendor = vendor?.name || data.outsourcing_company
+        data.vendor_id = vendor?.id
+        data.outsourcing_company_id = vendor?.id
+      }
+      return data
+    })
+    setLoading(true)
+      dispatch(
+        postDocument({
+          path: location.pathname,
+          document: ledger,
+        })
+      )
+        .then((res) => {
+          if (res.type.includes('rejected')) {
+            console.log('postDocument rejected: ', res)
+          } else {
+            console.log('after postDocument success : ', res)
+
+            const copy = structuredClone(res.payload)
+            setRowData((prev) => ({ ...prev, ...copy }))
+            gridRef.current.api.deselectAll()
+            messageApi.open({ type: 'success', content: '저장되었습니다.' })
+          }
+        })
+        .catch((error) => {
+          console.log('postDocument error: ', error)
+        })
+        .finally(() => {
+          setSelectedRows([])
+          setLoading(false)
+        })
+
     // [1] 일반적인 저장:
     // if (documentId !== 'book_delivery') {
     //   setLoading(true)
@@ -418,49 +465,6 @@ const TableSection = () => {
     //       console.log('post postVendorLedger error: ', error)
     //     })
     // }
-    if (documentId === 'book_delivery') {
-      newData = newData.map((row) => {
-        if (!row.parent_compay) {
-          const client = clients.find((client) => client.name === row.parent_compay)
-          row.client = client.name
-          row.client_id = client.id
-          row.parent_company_id = client.id
-        }
-        if (!row.outsourcing_company) {
-          const vendor = vendors.find((vendor) => vendor.name === row.outsourcing_company)
-          row.vendor = vendor.name
-          row.vendor_id = vendor.id
-          row.outsourcing_company_id = vendor.id
-        }
-        return row
-      })
-      setLoading(true)
-      dispatch(
-        postDocument({
-          path: location.pathname,
-          document: newData,
-        })
-      )
-        .then((res) => {
-          if (res.type.includes('rejected')) {
-            console.log('postDocument rejected: ', res)
-          } else {
-            console.log('after postDocument success : ', res)
-
-            const copy = structuredClone(res.payload)
-            setRowData((prev) => ({ ...prev, ...copy }))
-            gridRef.current.api.deselectAll()
-            messageApi.open({ type: 'success', content: '저장되었습니다.' })
-          }
-        })
-        .catch((error) => {
-          console.log('postDocument error: ', error)
-        })
-        .finally(() => {
-          setSelectedRows([])
-          setLoading(false)
-        })
-    }
   }
 
   const getRowId = useCallback((params) => {
@@ -468,7 +472,7 @@ const TableSection = () => {
   }, [])
 
   if (rowData.length === 0) {
-    return <div>데이터가 없습니다.</div> // 데이터 없으면 로딩 표시
+    return <EmptyContainer><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /></EmptyContainer> // 데이터 없으면 로딩 표시
   }
 
   return (
@@ -509,6 +513,14 @@ const TableSection = () => {
 }
 
 export default TableSection
+
+const EmptyContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #666666
+`
 
 const Wrapper = styled.div`
   flex: 1;

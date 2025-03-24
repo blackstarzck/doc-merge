@@ -202,7 +202,7 @@ const ActionHandler = ({ columns, rowData, selected, onRemoveRows, onSave }) => 
     <Wrapper>
       <Popconfirm
         title="삭제하시겠습니까?"
-        description="삭제된 데이터는 불러올 수 없습니다."
+        description="삭제된 데이터는 다시 불러올 수 없습니다."
         onConfirm={onRemoveRows}
         icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
         okText="Yes"

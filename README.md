@@ -1,8 +1,17 @@
-# React + Vite
+### 엑셀파일 업로드 시 주의사항
+- 엑셀의 의 시트명과 데이터베이스에 등록된 업체/거래처/기관명이 일치해야 한다.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are availabel:
+- 문서의 제일 첫 행은 반드시 컬럼이 있어야 한다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+- 엑셀에 있는 컬럼명은 테이블의 컬럼과 일치해야 한다.
+
+
+- 업로드 시 서버쪽에서 컬럼들의 띄어쓰기를 모두 없앤다. 그렇기 때문에 컬럼을 추가하거나 수정한 뒤 반드시 table.js(프론트), table.const.ts(서버) 에서 변경된 컬럼명을 업데이트 해줘야한다.
+
+
+- (주의) 엑셀 테이블의 컬럼명과 데이터베이스의 컬럼명은 1대1 매칭되기 때문에 엑셀에서 컬럼명 수정은 테이블을 다시 만들어야함을 유의해야 한다.
+
+
+- (주의) 
