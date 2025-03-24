@@ -2,7 +2,7 @@ import './styles.css'
 
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
-import { Empty } from 'antd';
+import { Empty } from 'antd'
 import { Button, message, notification } from 'antd'
 import { DateTime } from 'luxon'
 import { row } from 'mathjs'
@@ -110,17 +110,19 @@ const TableSection = () => {
         suppressNavigable: col.suppressNavigable,
         tooltipValueGetter: (p) => (p.value ? (col.calc ? `${col.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
         valueFormatter: (params) => {
-          if (params.colDef.cellDataType === 'text' && params.value && params.value.startsWith('=')) {
+          if (col.type === 'text' && params.value && String(params.value).startsWith('=')) {
             return calculateEquation(params.value.replace('=', ''), params.data, currentDocumentColumns)
-          }
-          if (col.type === 'number' && params.value) {
+          } else if (col.type === 'number' && params.value) {
+            if (String(params.value).startsWith('=')) {
+              return calculateEquation(params.value.replace('=', ''), params.data, currentDocumentColumns)
+            }
             return numberFormatter(params.value)
-          }
-          if (col.type === 'date' && params.value) {
+          } else if (col.type === 'date' && params.value) {
             return dateFormatter(params.value)
-          }
-          if (!params.value) {
+          } else if (!params.value) {
             return ''
+          } else {
+            if (typeof params.value === 'number') return numberFormatter(params.value)
           }
         },
       }
@@ -322,7 +324,6 @@ const TableSection = () => {
     }
 
     gridRef.current.api.forEachNode((node) => {
-      console.log('node: ', node)
       let cnt = 0
       for (const key in node.data) {
         if (!node.data[key]) cnt++
@@ -336,18 +337,17 @@ const TableSection = () => {
 
     console.log('[2] newData: ', newData)
 
-
-    let ledger = newData.filter((data) => data.continue_type && !data.continue_type.startsWith('연간'))
+    let ledger = newData.filter((data) => data.continue_type)
     ledger = ledger.map((data) => {
       if (typeof data.id !== 'number') delete data.id
-      if(!data.parent_company_id && (data.parent_company && data.parent_company !== '없음')){
-        const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company);
+      if (!data.parent_company_id && data.parent_company && data.parent_company !== '없음') {
+        const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company)
 
         data.client = client?.name || data.parent_company
         data.client_id = client?.id
         data.parent_company_id = client?.id
       }
-      if(!data.outsourcing_company_id && (data.outsourcing_company && data.outsourcing_company !== '없음')){
+      if (!data.outsourcing_company_id && data.outsourcing_company && data.outsourcing_company !== '없음') {
         const vendor = data.outsourcing_company_id || vendors.find((vendor) => vendor.name === data.outsourcing_company)
         data.vendor = vendor?.name || data.outsourcing_company
         data.vendor_id = vendor?.id
@@ -356,115 +356,32 @@ const TableSection = () => {
       return data
     })
     setLoading(true)
-      dispatch(
-        postDocument({
-          path: location.pathname,
-          document: ledger,
-        })
-      )
-        .then((res) => {
-          if (res.type.includes('rejected')) {
-            console.log('postDocument rejected: ', res)
-          } else {
-            console.log('after postDocument success : ', res)
+    dispatch(
+      postDocument({
+        path: location.pathname,
+        document: ledger,
+      })
+    )
+      .then((res) => {
+        if (res.type.includes('rejected')) {
+          console.log('postDocument rejected: ', res)
+        } else {
+          console.log('after postDocument success : ', res)
 
-            const copy = structuredClone(res.payload)
-            setRowData((prev) => ({ ...prev, ...copy }))
-            gridRef.current.api.deselectAll()
-            messageApi.open({ type: 'success', content: '저장되었습니다.' })
-          }
-        })
-        .catch((error) => {
-          console.log('postDocument error: ', error)
-        })
-        .finally(() => {
-          setSelectedRows([])
-          setLoading(false)
-        })
-
-    // [1] 일반적인 저장:
-    // if (documentId !== 'book_delivery') {
-    //   setLoading(true)
-    //   dispatch(
-    //     postDocument({
-    //       path: location.pathname,
-    //       document: newData,
-    //     })
-    //   )
-    //     .then((res) => {
-    //       if (res.type.includes('rejected')) {
-    //         console.log('postDocument rejected: ', res)
-    //       } else {
-    //         console.log('after postDocument success : ', res)
-
-    //         const copy = structuredClone(res.payload)
-    //         setRowData((prev) => ({ ...prev, ...copy }))
-    //         gridRef.current.api.deselectAll()
-    //         messageApi.open({ type: 'success', content: '저장되었습니다.' })
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.log('postDocument error: ', error)
-    //     })
-    //     .finally(() => {
-    //       setSelectedRows([])
-    //       setLoading(false)
-    //     })
-    // }
-
-    /**
-     * [2] 매출처(client_ledger) 저장
-     * postClientLedger 가 book_delivery & client_ledger 저장 (서버쪽 코드 확인)
-     */
-    // if (documentId === 'book_delivery') {
-    //   let cLedger = newData.filter((data) => data.parent_company && data.continue_type && data.continue_type.startsWith('연간'))
-    //   cLedger.map((data) => {
-    //     if (typeof data.id !== 'number') delete data.id
-    //     const cliendId = data.parent_company_id && clients.find((client) => client.name === data.parent_company)?.id
-    //     return { ...data, parent_company_id: cliendId }
-    //   })
-    //   console.log('cLedger: ', cLedger)
-    //   dispatch(postClientLedger(cLedger))
-    //     .then((res) => {
-    //       if (res.type.includes('rejected')) {
-    //         console.log('postClientLedger rejected: ', res)
-    //       } else {
-    //         const copy = structuredClone(res.payload)
-    //         console.log('after postClientLedger success : ', res)
-
-    //         setRowData((prev) => ({ ...prev, ...copy }))
-    //         gridRef.current.api.deselectAll()
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.log('post postClientLedger error: ', error)
-    //     })
-    // }
-
-    // [2] 매입처(vendor_ledger) 저장
-    // if (documentId === 'book_delivery') {
-    //   const vLedger = newData.filter((data) => !data.outsourcing_company || data.outsourcing_company !== '없음')
-    //   vLedger.map((data) => {
-    //     if (typeof data.id !== 'number') delete data.id
-    //     return data
-    //   })
-    //   console.log('vLedger: ', vLedger)
-    //   dispatch(postVendorLedger(vLedger))
-    //     .then((res) => {
-    //       if (res.type.includes('rejected')) {
-    //         console.log('postVendorLedger rejected: ', res)
-    //       } else {
-    //         const copy = structuredClone(res.payload)
-    //         console.log('after postVendorLedger success : ', res)
-
-    //         setRowData((prev) => ({ ...prev, ...copy }))
-    //         gridRef.current.api.deselectAll()
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.log('post postVendorLedger error: ', error)
-    //     })
-    // }
+          dispatch(getDocument(location.pathname))
+          // const copy = structuredClone(res.payload)
+          // setRowData((prev) => ({ ...prev, ...copy }))
+          gridRef.current.api.deselectAll()
+          messageApi.open({ type: 'success', content: '저장되었습니다.' })
+        }
+      })
+      .catch((error) => {
+        console.log('postDocument error: ', error)
+      })
+      .finally(() => {
+        setSelectedRows([])
+        setLoading(false)
+      })
   }
 
   const getRowId = useCallback((params) => {
@@ -472,7 +389,11 @@ const TableSection = () => {
   }, [])
 
   if (rowData.length === 0) {
-    return <EmptyContainer><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /></EmptyContainer> // 데이터 없으면 로딩 표시
+    return (
+      <EmptyContainer>
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      </EmptyContainer>
+    ) // 데이터 없으면 로딩 표시
   }
 
   return (
@@ -519,7 +440,7 @@ const EmptyContainer = styled.div`
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #666666
+  color: #666666;
 `
 
 const Wrapper = styled.div`
