@@ -135,25 +135,25 @@ const TableSection = () => {
       let colDef = currentDocumentColumns.map((col) => {
         return setColumnDefProps(col)
       })
-      // if (documentId === 'book_delivery') {
-      //   const clientLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'client_ledger')?.columns
-      //   const vendorLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'vendor_ledger')?.columns
-      //   colDef = [
-      //     ...colDef,
-      //     {
-      //       headerName: '매출처 원장',
-      //       headerClass: 'client-ledger-group',
-      //       marryChildren: true,
-      //       children: clientLedgerColumns.map((col) => setColumnDefProps(col)),
-      //     },
-      //     {
-      //       headerName: '매입처 원장',
-      //       headerClass: 'vendor-ledger-group',
-      //       marryChildren: true,
-      //       children: vendorLedgerColumns.map((col) => setColumnDefProps(col)),
-      //     },
-      //   ]
-      // }
+      if (documentId === 'book_delivery') {
+        const clientLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'client_ledger')?.columns
+        const vendorLedgerColumns = TABLE_COLUMNS.find((table) => table.key === 'vendor_ledger')?.columns
+        colDef = [
+          ...colDef,
+          {
+            headerName: '매출처 원장',
+            headerClass: 'client-ledger-group',
+            marryChildren: true,
+            children: clientLedgerColumns.map((col) => setColumnDefProps(col)),
+          },
+          {
+            headerName: '매입처 원장',
+            headerClass: 'vendor-ledger-group',
+            marryChildren: true,
+            children: vendorLedgerColumns.map((col) => setColumnDefProps(col)),
+          },
+        ]
+      }
       return colDef
     })
   }, [currentDocumentColumns])
@@ -337,8 +337,7 @@ const TableSection = () => {
 
     console.log('[2] newData: ', newData)
 
-    let ledger = newData.filter((data) => data.continue_type)
-    ledger = ledger.map((data) => {
+    newData = newData.map((data) => {
       if (typeof data.id !== 'number') delete data.id
       if (!data.parent_company_id && data.parent_company && data.parent_company !== '없음') {
         const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company)
@@ -359,7 +358,7 @@ const TableSection = () => {
     dispatch(
       postDocument({
         path: location.pathname,
-        document: ledger,
+        document: newData,
       })
     )
       .then((res) => {

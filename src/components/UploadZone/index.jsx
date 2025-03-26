@@ -118,3 +118,7 @@ const InnerWrapper = styled.div`
 `
 
 export default UploadZone
+
+
+
+

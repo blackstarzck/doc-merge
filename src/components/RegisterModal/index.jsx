@@ -79,7 +79,7 @@ const RegisterModal = ({ table, subTitle, modal, setModal, handleCreate, handleU
       }
       onCancel={() => setModal((prev) => ({ modal: null, open: false }))}
       footer={() => (
-        <Button type="primary" size="large" onClick={() => onSubmit()}>
+        <Button type="primary" size="large" disabled={true} onClick={() => onSubmit()}>
           {modal.data ? '수정' : '등록'}
         </Button>
       )}
