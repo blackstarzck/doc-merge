@@ -383,9 +383,34 @@ const TableSection = () => {
       })
   }
 
-  const getRowId = useCallback((params) => {
-    return String(params.data.id)
-  }, [])
+  const getRowId = useCallback(
+    (params) => {
+      return String(params.data.id)
+    },
+    [rowData]
+  )
+
+  const sum = useCallback(
+    (key) => {
+      return rowData.reduce((sum, item) => sum + item[key], 0)
+    },
+    [rowData]
+  )
+
+  const pinnedBottomRowData = useMemo(() => {
+    return (
+      clientId && [
+        {
+          cl_bk_price: sum('cl_bk_price'),
+          bk_supply_price: sum('bk_supply_price'),
+          cl_bk_supply_price: sum('cl_bk_supply_price'),
+          cl_total_payment: sum('cl_total_payment'),
+          cl_our_revenue_rate: ((sum('cl_our_revenue') / sum('cl_bk_price')) * 100).toFixed(2) + '%',
+          cl_our_revenue: sum('cl_our_revenue'),
+        },
+      ]
+    )
+  }, [rowData])
 
   if (rowData.length === 0) {
     return (
@@ -420,6 +445,12 @@ const TableSection = () => {
         onCellValueChanged={onCellValueChanged}
         onSelectionChanged={onRowSelected}
         tooltipShowDelay={500}
+        getRowStyle={(params) => {
+          if (params.node.rowPinned) {
+            return { fontWeight: 'bold', textAlign: 'right' }
+          }
+        }}
+        pinnedBottomRowData={pinnedBottomRowData}
         // onGridReady={onGridReady}
       />
 
