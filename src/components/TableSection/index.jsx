@@ -399,7 +399,7 @@ const TableSection = () => {
 
   const pinnedBottomRowData = useMemo(() => {
     return (
-      clientId && [
+      clientId ? [
         {
           cl_bk_price: sum('cl_bk_price'),
           bk_supply_price: sum('bk_supply_price'),
@@ -408,7 +408,7 @@ const TableSection = () => {
           cl_our_revenue_rate: ((sum('cl_our_revenue') / sum('cl_bk_price')) * 100).toFixed(2) + '%',
           cl_our_revenue: sum('cl_our_revenue'),
         },
-      ]
+      ] : []
     )
   }, [rowData])
 
