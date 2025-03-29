@@ -38,6 +38,10 @@ const dateFormatter = (value) => {
   return dt.toFormat('yyyy-MM-dd')
 }
 
+const CustomPinnedRowRenderer = (props) => {
+  return <span style={props.style}>{props.value}</span>
+}
+
 const TableSection = () => {
   const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
   const location = useLocation()
@@ -123,6 +127,18 @@ const TableSection = () => {
             return ''
           } else {
             if (typeof params.value === 'number') return numberFormatter(params.value)
+          }
+        },
+        cellRendererSelector: (params) => {
+          if (params.node.rowPinned) {
+            return {
+              component: CustomPinnedRowRenderer,
+              params: {
+                style: { color: '#5577CC' },
+              },
+            }
+          } else {
+            return undefined
           }
         },
       }
@@ -392,24 +408,25 @@ const TableSection = () => {
 
   const sum = useCallback(
     (key) => {
-      return rowData.reduce((sum, item) => sum + item[key], 0)
+      const sum = rowData.reduce((sum, item) => sum + item[key], 0)
+      return sum
     },
     [rowData]
   )
 
   const pinnedBottomRowData = useMemo(() => {
-    return (
-      clientId ? [
-        {
-          cl_bk_price: sum('cl_bk_price'),
-          bk_supply_price: sum('bk_supply_price'),
-          cl_bk_supply_price: sum('cl_bk_supply_price'),
-          cl_total_payment: sum('cl_total_payment'),
-          cl_our_revenue_rate: ((sum('cl_our_revenue') / sum('cl_bk_price')) * 100).toFixed(2) + '%',
-          cl_our_revenue: sum('cl_our_revenue'),
-        },
-      ] : []
-    )
+    return clientId
+      ? [
+          {
+            cl_bk_price: sum('cl_bk_price').toLocaleString('en-US'),
+            bk_supply_price: sum('bk_supply_price').toLocaleString('en-US'),
+            cl_bk_supply_price: sum('cl_bk_supply_price').toLocaleString('en-US'),
+            cl_total_payment: sum('cl_total_payment').toLocaleString('en-US'),
+            cl_our_revenue_rate: ((sum('cl_our_revenue') / sum('cl_bk_price')) * 100).toFixed(2) + '%',
+            cl_our_revenue: sum('cl_our_revenue').toLocaleString('en-US'),
+          },
+        ]
+      : []
   }, [rowData])
 
   if (rowData.length === 0) {
