@@ -34,7 +34,7 @@ const MainLayout = ({ children }) => {
   }
 
   const onFinish = ({ accessCode }) => {
-    const confirmedCode = import.meta.env.VITE_ACCESS_CODE
+    const confirmedCode = import.meta.env.VITE_ACCESS_CODE || 'tpwhdeodhkd'
     console.log('input code: ', accessCode, confirmedCode)
 
     if (accessCode === confirmedCode) {
