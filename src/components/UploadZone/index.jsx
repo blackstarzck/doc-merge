@@ -75,7 +75,7 @@ const UploadZone = () => {
   return (
     <Wrapper>
       {contextHolder}
-      <span style={{ color: '#b4b4b4', fontSize: 12 }}>※ 파일 첫 행에 헤더를 넣어주세요.</span>
+      <Description style={{ color: '#b4b4b4', fontSize: 12 }}>※ 파일 첫 행에 헤더를 넣어주세요.</Description>
       <UploadWrapper {...props}>
         <InnerWrapper>
           <UploadOutlined className="!text-gray-400" />
@@ -85,6 +85,16 @@ const UploadZone = () => {
     </Wrapper>
   )
 }
+
+const Description = styled.span`
+  color: '#b4b4b4';
+  font-size: 12px;
+  display: block;
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+`
 
 const UploadWrapper = styled(Dragger)`
   & .ant-upload-list-item .anticon,

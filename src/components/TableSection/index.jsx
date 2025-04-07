@@ -2,24 +2,20 @@ import './styles.css'
 
 import { themeQuartz } from 'ag-grid-community'
 import { AgGridReact } from 'ag-grid-react'
-import { Empty } from 'antd'
+import { Empty, Flex } from 'antd'
 import { Button, message, notification } from 'antd'
 import { DateTime } from 'luxon'
-import { row } from 'mathjs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { TABLE_COLUMNS } from '../../constants/tables'
-import useCurrentDocumentColumns from '../../hooks/useCurrentDocumentColumns'
 import { useIdsFromParams } from '../../hooks/useIdsFromParams'
 import { selectAllClient } from '../../store/client/clientSlice'
-import { postClientLedger } from '../../store/clientLedger/clientLedgerSlice'
 import { deleteDocument, getDocument, postDocument, selectAllDocuments } from '../../store/document/documentSlice'
 import { selectOrganizationById } from '../../store/organization/organizationSlice'
 import { selectAllVendor } from '../../store/vendor/vendorSlice'
-import { postVendorLedger } from '../../store/vendorLedger/vendorLedgerSlice'
 import { calculateEquation } from '../../utils/excel.util'
 import ActionHandler from '../ActionHandler'
 
@@ -42,10 +38,9 @@ const CustomPinnedRowRenderer = (props) => {
   return <span style={props.style}>{props.value}</span>
 }
 
-const TableSection = () => {
-  const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
+const TableSection = ({ viewType, currentDocumentColumns }) => {
+  const { documentId, organizationId, clientId, vendorId, markClientId } = useIdsFromParams()
   const location = useLocation()
-  const currentDocumentColumns = useCurrentDocumentColumns()
   const dispatch = useDispatch()
   const gridRef = useRef()
   const [rowData, setRowData] = useState([])
@@ -67,7 +62,7 @@ const TableSection = () => {
       editable: true,
       enableCellChangeFlash: true,
       filter: true,
-      sortable: false,
+      sortable: true,
     }),
     []
   )
@@ -105,12 +100,13 @@ const TableSection = () => {
   const setColumnDefProps = useCallback(
     (col) => {
       return {
+        pinned: col.pinned || null,
         width: col.width || null,
         field: col.key,
         headerName: col.name,
-        hide: col.hide,
+        hide: col.hide || false,
         cellDataType: col.type,
-        editable: clientId || vendorId || markInfoId || col.editable,
+        editable: clientId || vendorId || markClientId || col.editable,
         suppressNavigable: col.suppressNavigable,
         tooltipValueGetter: (p) => (p.value ? (col.calc ? `${col.calc?.text} = ${numberFormatter(p.value)}` : null) : null),
         valueFormatter: (params) => {
@@ -145,6 +141,31 @@ const TableSection = () => {
     },
     [currentDocumentColumns]
   )
+
+  useEffect(() => {
+    const filterConfigs = {
+      all: null,
+      yearly: {
+        continue_type: {
+          filterType: 'text',
+          type: 'contains',
+          filter: '연간',
+        },
+      },
+      default: {
+        continue_type: {
+          filterType: 'text',
+          type: 'notContains',
+          filter: '연간',
+        },
+      },
+    }
+
+    const filterModel = filterConfigs[viewType] || filterConfigs.default
+    gridRef.current?.api.setFilterModel(filterModel)
+
+    console.log('api: ', gridRef.current)
+  }, [viewType, gridRef])
 
   useEffect(() => {
     setColumnDefs(() => {
@@ -187,7 +208,7 @@ const TableSection = () => {
         }
       })
     )
-  }, [vendors, clients, documentId, organizationId, clientId, vendorId, markInfoId])
+  }, [vendors, clients, documentId, organizationId, clientId, vendorId, markClientId])
 
   useEffect(() => {
     console.log('columnDefs: ', columnDefs)
@@ -209,7 +230,7 @@ const TableSection = () => {
       })
       .catch((error) => console.error('Failed to load data', error))
       .finally(() => setLoading(false))
-  }, [documentId, organizationId, clientId, vendorId, markInfoId])
+  }, [documentId, organizationId, clientId, vendorId, markClientId])
 
   useEffect(() => {
     console.log('document 업데이트됨!!! 테이블 새로 만듬: ', document)
@@ -353,50 +374,50 @@ const TableSection = () => {
 
     console.log('[2] newData: ', newData)
 
-    newData = newData.map((data) => {
-      if (typeof data.id !== 'number') delete data.id
-      if (!data.parent_company_id && data.parent_company && data.parent_company !== '없음') {
-        const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company)
+    // newData = newData.map((data) => {
+    //   if (typeof data.id !== 'number') delete data.id
+    //   if (!data.parent_company_id && data.parent_company && data.parent_company !== '없음') {
+    //     const client = data.parent_company_id || clients.find((c) => c.name === data.parent_company)
 
-        data.client = client?.name || data.parent_company
-        data.client_id = client?.id
-        data.parent_company_id = client?.id
-      }
-      if (!data.outsourcing_company_id && data.outsourcing_company && data.outsourcing_company !== '없음') {
-        const vendor = data.outsourcing_company_id || vendors.find((vendor) => vendor.name === data.outsourcing_company)
-        data.vendor = vendor?.name || data.outsourcing_company
-        data.vendor_id = vendor?.id
-        data.outsourcing_company_id = vendor?.id
-      }
-      return data
-    })
-    setLoading(true)
-    dispatch(
-      postDocument({
-        path: location.pathname,
-        document: newData,
-      })
-    )
-      .then((res) => {
-        if (res.type.includes('rejected')) {
-          console.log('postDocument rejected: ', res)
-        } else {
-          console.log('after postDocument success : ', res)
+    //     data.client = client?.name || data.parent_company
+    //     data.client_id = client?.id
+    //     data.parent_company_id = client?.id
+    //   }
+    //   if (!data.outsourcing_company_id && data.outsourcing_company && data.outsourcing_company !== '없음') {
+    //     const vendor = data.outsourcing_company_id || vendors.find((vendor) => vendor.name === data.outsourcing_company)
+    //     data.vendor = vendor?.name || data.outsourcing_company
+    //     data.vendor_id = vendor?.id
+    //     data.outsourcing_company_id = vendor?.id
+    //   }
+    //   return data
+    // })
+    // setLoading(true)
+    // dispatch(
+    //   postDocument({
+    //     path: location.pathname,
+    //     document: newData,
+    //   })
+    // )
+    //   .then((res) => {
+    //     if (res.type.includes('rejected')) {
+    //       console.log('postDocument rejected: ', res)
+    //     } else {
+    //       console.log('after postDocument success : ', res)
 
-          dispatch(getDocument(location.pathname))
-          // const copy = structuredClone(res.payload)
-          // setRowData((prev) => ({ ...prev, ...copy }))
-          gridRef.current.api.deselectAll()
-          messageApi.open({ type: 'success', content: '저장되었습니다.' })
-        }
-      })
-      .catch((error) => {
-        console.log('postDocument error: ', error)
-      })
-      .finally(() => {
-        setSelectedRows([])
-        setLoading(false)
-      })
+    //       dispatch(getDocument(location.pathname))
+    //       // const copy = structuredClone(res.payload)
+    //       // setRowData((prev) => ({ ...prev, ...copy }))
+    //       gridRef.current.api.deselectAll()
+    //       messageApi.open({ type: 'success', content: '저장되었습니다.' })
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.log('postDocument error: ', error)
+    //   })
+    //   .finally(() => {
+    //     setSelectedRows([])
+    //     setLoading(false)
+    //   })
   }
 
   const getRowId = useCallback(
@@ -440,7 +461,6 @@ const TableSection = () => {
   return (
     <Wrapper>
       {notificationContextHolder}
-
       <AgGridReact
         theme={theme}
         loading={loading}
@@ -449,7 +469,7 @@ const TableSection = () => {
         rowData={rowData}
         columnDefs={columnDefs}
         rowSelection={{
-          mode: clientId || vendorId || markInfoId ? null : 'multiRow',
+          mode: clientId || vendorId || markClientId ? null : 'multiRow',
         }}
         rowClassRules={{
           'rag-amber-outer': (params) => {
@@ -470,8 +490,7 @@ const TableSection = () => {
         pinnedBottomRowData={pinnedBottomRowData}
         // onGridReady={onGridReady}
       />
-
-      <ButtonWrapper disabled={clientId || vendorId || markInfoId} size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
+      <ButtonWrapper disabled={clientId || vendorId || markClientId} size="mdeium" variant="outlined" color="default" onClick={onAddRow}>
         Add a row +
       </ButtonWrapper>
       {contextHolder}

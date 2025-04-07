@@ -10,6 +10,7 @@ import markClientInfoReducer from './markClient/markClientSlice'
 import thunk from './middleware/thunk'
 import modalsReducer from './modals/modalsSlice'
 import organizationInfoReducer from './organization/organizationSlice'
+import savedColumnsReducer from './savedColumns/savedColumnsSlice'
 import selectedRowReducer from './selectedRows/selectedRowIdSlice'
 import vendorReducer from './vendor/vendorSlice'
 import vendorLedgerReducer from './vendorLedger/vendorLedgerSlice'
@@ -28,6 +29,7 @@ export default configureStore({
     formatItems: formatItemsReducer,
     format: formatReducer,
     access: accessReducer,
+    savedColumns: savedColumnsReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
 })

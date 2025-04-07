@@ -9,12 +9,13 @@ import styled from 'styled-components'
 import api from '../../../api/api'
 import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
 import { createMarkClient, getAllMarkClient, selectAllMarkClient, updateMarkClient } from '../../../store/markClient/markClientSlice'
+import { getDocument } from '../../../store/document/documentSlice'
 import RegisterModal from '../../RegisterModal'
 
 const { useToken } = theme
 
 const MarkStatus = () => {
-  const { markInfoId } = useIdsFromParams()
+  const { markClientId } = useIdsFromParams()
   const markClients = useSelector(selectAllMarkClient) || []
   const dispatch = useDispatch()
   const [modal, setModal] = useState({
@@ -31,7 +32,7 @@ const MarkStatus = () => {
       name: 'file',
       multiple: false,
       accept: '.xlsx, .xls',
-      showUploadList: true,
+      showUploadList: false,
       beforeUpload: (file) => {
         const isExcel =
           file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -47,39 +48,41 @@ const MarkStatus = () => {
         return true
       },
       customRequest: async ({ file, onSuccess, onError }) => {
-        const url = `${import.meta.env.VITE_API_URL}/upload/mark_info`
-        const header = { 'Content-Type': 'multipart/form-data' }
         const formData = new FormData()
-        formData.append('file', file)
-        try {
-          const response = await api.post(url, {}, header).then((res) => res)
 
-          console.log('response: ', response)
+        formData.append('file', file)
+
+        try {
+          const response = await api
+            .post(`${import.meta.env.VITE_API_URL}/upload${location.pathname}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+            .then((res) => {
+              console.log('[1] response: ', res)
+              dispatch(getDocument(location.pathname)).then((res) => console.log('post 성공 후 getDocument 결과: ', res))
+              return res
+            })
+
+          console.log('[2] response: ', response)
 
           message.open({ type: 'success', content: '파일 업로드 성공!' })
-          onSuccess(response.data)
         } catch (error) {
           console.log('error: ', error)
           message.open({ type: 'error', content: '파일 업로드 실패.' })
-          onError(error)
         }
       },
       onDrop(e) {},
     }),
-    []
+    [markClientId]
   )
   const items = useMemo(
     () => [
       {
         label: (
-          <Tooltip placement="right" title="납품처를 선택해주세요">
-            <Upload disabled={true} {...props}>
-              <Space style={{ width: '100%', height: 32 }}>
-                <UploadOutlined />
-                마크장비 진행현황 업르도
-              </Space>
-            </Upload>
-          </Tooltip>
+          <Upload {...props}>
+            <Space style={{ width: '100%', height: 32 }}>
+              <UploadOutlined />
+              마크장비 진행현황 업로드
+            </Space>
+          </Upload>
         ),
         key: 0,
       },
@@ -153,7 +156,7 @@ const MarkStatus = () => {
   }
 
   const handleUpdate = (values) => {
-    dispatch(updateMarkClient({ id: markInfoId, ...values }))
+    dispatch(updateMarkClient({ id: markClientId, ...values }))
       .then((res) => {
         if (res.type.includes('rejected')) {
           setSubmitStatus('error')
@@ -195,7 +198,7 @@ const MarkStatus = () => {
           <Space.Compact block>
             <SelectWrapper
               open={dropdownOpen}
-              value={markInfoId || undefined}
+              value={markClientId || undefined}
               showSearch
               placeholder="마크장비 진행현황을 선택해주세요"
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}

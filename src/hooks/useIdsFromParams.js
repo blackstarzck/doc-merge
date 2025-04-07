@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
 export const useIdsFromParams = () => {
-  const { documentId, organizationId, clientId, vendorId, markInfoId } = useParams()
+  const { documentId, organizationId, clientId, vendorId, markClientId } = useParams()
 
   return useMemo(() => {
     return {
@@ -10,7 +10,7 @@ export const useIdsFromParams = () => {
       organizationId: organizationId ? parseInt(organizationId) : null,
       clientId: clientId ? parseInt(clientId) : null,
       vendorId: vendorId ? parseInt(vendorId) : null,
-      markInfoId: markInfoId ? parseInt(markInfoId) : null,
+      markClientId: markClientId ? parseInt(markClientId) : null,
     }
-  }, [documentId, organizationId, clientId, vendorId, markInfoId]) // 생략 가능
+  }, [documentId, organizationId, clientId, vendorId, markClientId]) // 생략 가능
 }

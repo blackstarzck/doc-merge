@@ -26,7 +26,7 @@ function App() {
         <Route path="/vendor_ledger/:vendorId" element={<BuilderPage />} />
 
         <Route path="/mark_status" element={<Navigate to="1" replace />} />
-        <Route path="/mark_status/:markInfoId" element={<BuilderPage />} />
+        <Route path="/mark_status/:markClientId" element={<BuilderPage />} />
 
         <Route path="*" element={<Navigate to={`/overview/${TABLE_COLUMNS[0].key}`} replace />} />
       </Routes>

@@ -1,19 +1,17 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice } from '@reduxjs/toolkit'
 
-import { LOCAL_STORAGE_KEY } from "../../components/keys"
-import { DEFAULT_FORMAT_ITEMS } from "../../constants/options"
+import { LOCAL_STORAGE_FORMAT_ITEM_KEY } from '../../components/keys'
+import { DEFAULT_FORMAT_ITEMS } from '../../constants/options'
 
-const localStorageFormatItems = localStorage.getItem(LOCAL_STORAGE_KEY)
-const initialState = localStorageFormatItems
-  ? JSON.parse(localStorageFormatItems)[0]
-  : DEFAULT_FORMAT_ITEMS[0]
+const localStorageFormatItems = localStorage.getItem(LOCAL_STORAGE_FORMAT_ITEM_KEY)
+const initialState = localStorageFormatItems ? JSON.parse(localStorageFormatItems)[0] : DEFAULT_FORMAT_ITEMS[0]
 
 export const formatSlice = createSlice({
-  name: "format",
+  name: 'format',
   initialState: DEFAULT_FORMAT_ITEMS[0],
   reducers: {
     setFormat: (state, action) => {
-      console.log("setFormat: ", action.payload)
+      console.log('setFormat: ', action.payload)
       return action.payload
     },
   },

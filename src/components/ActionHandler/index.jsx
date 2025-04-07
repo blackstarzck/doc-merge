@@ -28,7 +28,7 @@ const numberToColumnLabel = (num) => {
 }
 
 const ActionHandler = ({ columns, rowData, selected, onRemoveRows, onSave }) => {
-  const { documentId, organizationId, clientId, vendorId, markInfoId } = useIdsFromParams()
+  const { documentId, organizationId, clientId, vendorId, markClientId } = useIdsFromParams()
   const selectedFormat = useSelector((state) => state.format)
   const fileName = useSetFileName()
 
@@ -208,12 +208,12 @@ const ActionHandler = ({ columns, rowData, selected, onRemoveRows, onSave }) => 
         okText="Yes"
         cancelText="No"
       >
-        <Button disabled={clientId || vendorId || markInfoId || !selected.length} size="large" danger type="text">
+        <Button disabled={clientId || vendorId || markClientId || !selected.length} size="large" danger type="text">
           삭제
         </Button>
       </Popconfirm>
       <Flex gap="middle">
-        <Button size="large" type="primary" disabled={clientId || vendorId || markInfoId} onClick={onSave}>
+        <Button size="large" type="primary" disabled={clientId || vendorId || markClientId} onClick={onSave}>
           저장
         </Button>
         <ExcelButton disabled={rowData.length === 0} color="default" variant="filled" icon={<DownloadOutlined />} size="large" onClick={downloadExcel}>

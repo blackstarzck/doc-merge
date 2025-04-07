@@ -5,7 +5,7 @@ import ClientLedger from '../SelectField/ClientLedger'
 import MarkStatus from '../SelectField/MarkStatus'
 import VendorLedger from '../SelectField/VendorLedger'
 
-const BodySelectSection = () => {
+const SelectSection = () => {
   return (
     <SpaceWrapper align="start">
       <Space wrap size="large">
@@ -22,4 +22,4 @@ const SpaceWrapper = styled(Space)`
   justify-content: space-between;
 `
 
-export default BodySelectSection
+export default SelectSection
