@@ -1,4 +1,4 @@
-import { Flex, Radio, Select } from 'antd'
+import { Flex, Radio, Select, Tooltip } from 'antd'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
@@ -29,36 +29,43 @@ const setTableKeyById = (idsObj) => {
 const BodySection = () => {
   const idsObj = useIdsFromParams()
   const id = setTableKeyById(idsObj)
-  console.log('id: ', id)
   const currentDocumentColumns = useSelector((state) => {
-    const savedColumns = state.savedColumns.data[id].columns
+    const savedColumns = state.savedColumns.data[id]?.columns || []
     return savedColumns
   })
   const [columns, setColumns] = useState([])
   const [viewType, setViewType] = useState('all')
+  const [disabled, setRadioStatus] = useState(false)
 
   useEffect(() => {
     console.log('currentDocumentColumns: ', currentDocumentColumns)
     setColumns(currentDocumentColumns)
+    const find = currentDocumentColumns.find((col) => col.key === 'continue_type')
+    if (find) {
+      setRadioStatus(find.hide)
+    }
   }, [currentDocumentColumns])
 
   return (
     <Wrapper>
       <SelectSection />
       <Flex justify="space-between" gap={16}>
-        <Radio.Group
-          style={{ width: 450 }}
-          block
-          options={[
-            { label: '모두 보기', value: 'all' },
-            { label: '연간', value: 'yearly' },
-            { label: '단발', value: 'daily' },
-          ]}
-          optionType="button"
-          buttonStyle="solid"
-          defaultValue={'all'}
-          onChange={(e) => setViewType(e.target.value)}
-        />
+        <Tooltip title={disabled ? '날짜 컬럼을 활성화해주세요' : null}>
+          <Radio.Group
+            disabled={disabled}
+            style={{ width: 450 }}
+            block
+            options={[
+              { label: '모두 보기', value: 'all' },
+              { label: '연간', value: 'yearly' },
+              { label: '단발', value: 'daily' },
+            ]}
+            optionType="button"
+            buttonStyle="solid"
+            defaultValue={'all'}
+            onChange={(e) => setViewType(e.target.value)}
+          />
+        </Tooltip>
 
         <Select
           mode="multiple"

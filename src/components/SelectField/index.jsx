@@ -65,8 +65,8 @@ const SelectField = ({ option, table }) => {
     }),
     []
   )
-  const items = useMemo(
-    () => [
+  const items = useMemo(() => {
+    return [
       {
         label: (
           <Upload {...props}>
@@ -90,9 +90,8 @@ const SelectField = ({ option, table }) => {
         ),
         key: 1,
       },
-    ],
-    []
-  )
+    ]
+  }, [])
 
   const onClickOpenModal = useCallback((data) => {
     setTimeout(() => setModal((prev) => ({ data, open: true })), 200)
@@ -111,7 +110,6 @@ const SelectField = ({ option, table }) => {
   )
 
   const selectOptions = useMemo(() => {
-    console.log('option================================ ', option)
     return option.map((item) => ({
       name: item.name,
       value: item.id,
@@ -133,8 +131,6 @@ const SelectField = ({ option, table }) => {
       ),
     }))
   }, [option, onClickEdit])
-
-  console.log(`=====================================${table} renderd=====================================`)
 
   return (
     <>
