@@ -218,7 +218,6 @@ const TableSection = ({ viewType, currentDocumentColumns }) => {
       .then((res) => {
         const data = res.payload ? structuredClone(res.payload) : []
         const dateTypesColumns = currentDocumentColumns.filter((item) => item.type === 'date').map((item) => item.key)
-        console.log('data: ', data)
         setRowData(() =>
           data.map((item) => {
             dateTypesColumns.forEach((column) => {
@@ -233,7 +232,6 @@ const TableSection = ({ viewType, currentDocumentColumns }) => {
   }, [documentId, organizationId, clientId, vendorId, markClientId])
 
   useEffect(() => {
-    console.log('document 업데이트됨!!! 테이블 새로 만듬: ', document)
     if (document.length > 0) {
       const copy = structuredClone(document)
       setRowData(() =>

@@ -1,9 +1,9 @@
 import { Space } from 'antd'
 import styled from 'styled-components'
 
-import ClientLedger from '../SelectField/ClientLedger'
-import MarkStatus from '../SelectField/MarkStatus'
-import VendorLedger from '../SelectField/VendorLedger'
+import ClientLedger from '../ClientLedger'
+import MarkStatus from '../MarkStatus'
+import VendorLedger from '../VendorLedger'
 
 const SelectSection = () => {
   return (

@@ -22,23 +22,20 @@ const setTableKeyById = (idsObj) => {
   } else if (markClientId) {
     key = 'mark_status'
   }
-  console.log('key: ', key)
   return key
 }
 
 const BodySection = () => {
   const idsObj = useIdsFromParams()
   const id = setTableKeyById(idsObj)
-  const currentDocumentColumns = useSelector((state) => {
-    const savedColumns = state.savedColumns.data[id]?.columns || []
-    return savedColumns
-  })
+  const currentDocumentColumns = useSelector((state) => state.savedColumns.data[id]?.columns || [])
   const [columns, setColumns] = useState([])
   const [viewType, setViewType] = useState('all')
   const [disabled, setRadioStatus] = useState(false)
 
   useEffect(() => {
-    console.log('currentDocumentColumns: ', currentDocumentColumns)
+    console.log('switch!', viewType)
+    setViewType(() => 'all')
     setColumns(currentDocumentColumns)
     const find = currentDocumentColumns.find((col) => col.key === 'continue_type')
     if (find) {
@@ -52,17 +49,17 @@ const BodySection = () => {
       <Flex justify="space-between" gap={16}>
         <Tooltip title={disabled ? '날짜 컬럼을 활성화해주세요' : null}>
           <Radio.Group
-            disabled={disabled}
+            disabled={id !== 'book_delivery' || disabled}
             style={{ width: 450 }}
             block
             options={[
-              { label: '모두 보기', value: 'all' },
+              { label: '모두', value: 'all' },
               { label: '연간', value: 'yearly' },
               { label: '단발', value: 'daily' },
             ]}
             optionType="button"
             buttonStyle="solid"
-            defaultValue={'all'}
+            value={viewType}
             onChange={(e) => setViewType(e.target.value)}
           />
         </Tooltip>

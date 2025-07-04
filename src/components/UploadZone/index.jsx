@@ -6,6 +6,7 @@ import styled from 'styled-components'
 
 import api from '../../api/api'
 import { getDocument } from '../../store/document/documentSlice'
+import { UPLOAD_CONTROL_STATUS } from '../../constants/dev.config'
 
 const { Text } = Typography
 
@@ -75,13 +76,17 @@ const UploadZone = () => {
   return (
     <Wrapper>
       {contextHolder}
-      <Description style={{ color: '#b4b4b4', fontSize: 12 }}>※ 파일 첫 행에 헤더를 넣어주세요.</Description>
-      <UploadWrapper {...props}>
-        <InnerWrapper>
-          <UploadOutlined className="!text-gray-400" />
-          <p className="text-gray-400">업로드</p>
-        </InnerWrapper>
-      </UploadWrapper>
+      {UPLOAD_CONTROL_STATUS && (
+        <>
+          <Description style={{ color: '#b4b4b4', fontSize: 12 }}>※ 파일 첫 행에 헤더를 넣어주세요.</Description>
+          <UploadWrapper {...props}>
+            <InnerWrapper>
+              <UploadOutlined className="!text-gray-400" />
+              <p className="text-gray-400">업로드</p>
+            </InnerWrapper>
+          </UploadWrapper>
+        </>
+      )}
     </Wrapper>
   )
 }
@@ -128,7 +133,3 @@ const InnerWrapper = styled.div`
 `
 
 export default UploadZone
-
-
-
-

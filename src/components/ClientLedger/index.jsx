@@ -1,22 +1,24 @@
 import { EditOutlined, EllipsisOutlined, FormOutlined, UploadOutlined } from '@ant-design/icons'
-import { App, Button, ConfigProvider, Dropdown, Flex, message, Select, Space, Tooltip, Upload } from 'antd'
+import { App, Button, ConfigProvider, Dropdown, Flex, Select, Space, Upload } from 'antd'
 import { theme } from 'antd'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import api from '../../../api/api'
-import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
-import { createMarkClient, getAllMarkClient, selectAllMarkClient, updateMarkClient } from '../../../store/markClient/markClientSlice'
-import { getDocument } from '../../../store/document/documentSlice'
-import RegisterModal from '../../RegisterModal'
+import api from '../../api/api'
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import { createClient, getAllClient, selectAllClient, updateClient } from '../../store/client/clientSlice'
+import { getDocument } from '../../store/document/documentSlice'
+import RegisterModal from '../RegisterModal'
+import { UPLOAD_CONTROL_STATUS } from '../../constants/dev.config'
 
 const { useToken } = theme
 
-const MarkStatus = () => {
-  const { markClientId } = useIdsFromParams()
-  const markClients = useSelector(selectAllMarkClient) || []
+const ClientLedger = () => {
+  const location = useLocation()
+  const { clientId } = useIdsFromParams()
+  const clients = useSelector(selectAllClient) || []
   const dispatch = useDispatch()
   const [modal, setModal] = useState({
     open: false,
@@ -71,16 +73,16 @@ const MarkStatus = () => {
       },
       onDrop(e) {},
     }),
-    [markClientId]
+    [clientId]
   )
   const items = useMemo(
     () => [
       {
         label: (
-          <Upload {...props}>
+          <Upload disabled={clientId ? false : true} {...props}>
             <Space style={{ width: '100%', height: 32 }}>
               <UploadOutlined />
-              마크장비 진행현황 업로드
+              매출처 원장 업로드
             </Space>
           </Upload>
         ),
@@ -99,7 +101,7 @@ const MarkStatus = () => {
         key: 1,
       },
     ],
-    []
+    [clientId]
   )
 
   const onClickOpenModal = useCallback((data) => {
@@ -111,15 +113,15 @@ const MarkStatus = () => {
       e.preventDefault()
       e.stopPropagation()
 
-      const find = markClients.find((item) => item.id === id)
+      const find = clients.find((item) => item.id === id)
       console.log('find: ', find)
       setTimeout(() => onClickOpenModal(find), 200)
     },
-    [markClients, onClickOpenModal]
+    [clients, onClickOpenModal]
   )
 
   const selectOptions = useMemo(() => {
-    return markClients.map((item) => ({
+    return clients.map((item) => ({
       name: item.name,
       value: item.id,
       label: (
@@ -139,10 +141,10 @@ const MarkStatus = () => {
         </Flex>
       ),
     }))
-  }, [markClients, onClickEdit])
+  }, [clients, onClickEdit])
 
   const handleCreate = (values) => {
-    dispatch(createMarkClient(values))
+    dispatch(createClient(values))
       .then((res) => {
         if (res.type.includes('rejected')) {
           setSubmitStatus('error')
@@ -156,7 +158,7 @@ const MarkStatus = () => {
   }
 
   const handleUpdate = (values) => {
-    dispatch(updateMarkClient({ id: markClientId, ...values }))
+    dispatch(updateClient({ id: clientId, ...values }))
       .then((res) => {
         if (res.type.includes('rejected')) {
           setSubmitStatus('error')
@@ -179,13 +181,13 @@ const MarkStatus = () => {
   }, [submitStatus])
 
   useEffect(() => {
-    dispatch(getAllMarkClient())
+    dispatch(getAllClient())
   }, [])
 
   return (
     <>
       <Space wrap size="small">
-        <span>마크장비 진행현황</span>
+        <span>매출처 원장</span>
         <ConfigProvider
           theme={{
             components: {
@@ -198,25 +200,29 @@ const MarkStatus = () => {
           <Space.Compact block>
             <SelectWrapper
               open={dropdownOpen}
-              value={markClientId || undefined}
+              value={clientId || undefined}
               showSearch
-              placeholder="마크장비 진행현황을 선택해주세요"
+              placeholder="매출처 원장을 선택해주세요"
               onDropdownVisibleChange={(visible) => setDropdownOpen(visible)}
               optionFilterProp="name"
               optionLabelProp="name"
               options={selectOptions}
               onSelect={(value) => {
-                navigate(`/mark_status/${value}`)
+                navigate(`/client_ledger/${value}`)
               }}
             />
 
-            <Dropdown menu={{ items }} trigger={['click']}>
-              <Button icon={<EllipsisOutlined />}></Button>
-            </Dropdown>
+            {UPLOAD_CONTROL_STATUS ? (
+              <Dropdown menu={{ items }} trigger={['click']}>
+                <Button icon={<EllipsisOutlined />}></Button>
+              </Dropdown>
+            ) : (
+              <Button icon={<FormOutlined />} onClick={() => onClickOpenModal()}></Button>
+            )}
           </Space.Compact>
         </ConfigProvider>
       </Space>
-      <RegisterModal modal={modal} setModal={setModal} subTitle="마크장비 진행현황" table="mark_info" handleCreate={handleCreate} handleUpdate={handleUpdate} />
+      <RegisterModal modal={modal} setModal={setModal} subTitle="매출처 원장" table="client" handleCreate={handleCreate} handleUpdate={handleUpdate} />
     </>
   )
 }
@@ -234,4 +240,4 @@ const SelectWrapper = styled(Select)`
   }
 `
 
-export default React.memo(MarkStatus)
+export default React.memo(ClientLedger)

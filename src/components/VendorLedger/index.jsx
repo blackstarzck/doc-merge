@@ -6,11 +6,12 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import api from '../../../api/api'
-import { useIdsFromParams } from '../../../hooks/useIdsFromParams'
-import { getDocument } from '../../../store/document/documentSlice'
-import { createVendor, getAllVendor, selectAllVendor, updateVendor } from '../../../store/vendor/vendorSlice'
-import RegisterModal from '../../RegisterModal'
+import api from '../../api/api'
+import { useIdsFromParams } from '../../hooks/useIdsFromParams'
+import { getDocument } from '../../store/document/documentSlice'
+import { createVendor, getAllVendor, selectAllVendor, updateVendor } from '../../store/vendor/vendorSlice'
+import RegisterModal from '../RegisterModal'
+import { UPLOAD_CONTROL_STATUS } from '../../constants/dev.config'
 
 const { useToken } = theme
 
@@ -210,9 +211,13 @@ const VendorLedger = () => {
               }}
             />
 
-            <Dropdown menu={{ items }} trigger={['click']}>
-              <Button icon={<EllipsisOutlined />}></Button>
-            </Dropdown>
+            {UPLOAD_CONTROL_STATUS ? (
+              <Dropdown menu={{ items }} trigger={['click']}>
+                <Button icon={<EllipsisOutlined />}></Button>
+              </Dropdown>
+            ) : (
+              <Button icon={<FormOutlined />} onClick={() => onClickOpenModal()}></Button>
+            )}
           </Space.Compact>
         </ConfigProvider>
       </Space>
